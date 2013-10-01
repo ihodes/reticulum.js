@@ -2,7 +2,7 @@ var vows     = require('vows'),
     assert   = require('assert'),
     should   = require('should');
 
-var reticulum = require('../fsm');
+var reticulum = require('../reticulum');
 
 var testfsm = {
     stateA: { 
