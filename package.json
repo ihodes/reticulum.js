@@ -5,7 +5,11 @@
   "description" : "networked fsm",
   "dependencies": {
       "underscore":  "1.5.x",
-      "underscore-contrib": "0.1.4"
+      "underscore-contrib": "0.1.4",
+      "winston": "0.7.2",
+      "express": "3.4",
+      "express-namespace": "0.1.1",
+      "loch": "0.1.4"
   },
   "devDependencies": {
       "should": "1.2.2",

@@ -1,6 +1,8 @@
 See `docs.md` for documentation. More to come. 
 
-Test with `vows test/* --spec`.
+To set up, `cp .envTemplate .env`, make sure you have foreman installed via the heroku toolbelt, `npm install` deps, and run with `make`.
+
+Test with `vows test/* --spec`. Need vows in order to run tests `npm install vows -g`.
 
 ##### Todo: 
 
@@ -17,7 +19,9 @@ Test with `vows test/* --spec`.
 6. Create API for creating FSMs via HTTP
 7. GUI
 8. Hook up to backing services e.g. Twilio, Mailgun to start
-9. Schedule reification of FSMs
+9. Schedule reification of FSMs (can schedule with a given global state object; this
+   allows reifying FSMs with e.g. environment variables for a given task, or information
+   the FSM would need to message a given person...)
 10. Schedule backing services to run
 11. Communication via message queues and busses (pubsub model)
 12. Store everything on Mongo/Redis (for persistence) and allow loading of stored fsmMs (should just store fsmM in mongo...)
