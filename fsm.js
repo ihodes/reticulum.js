@@ -1,0 +1,177 @@
+var _ = require('underscore');
+require('underscore-contrib');
+
+// Helpers
+var init = function(args) {
+    return args.slice(0, args.length-1);
+};
+
+var compose = function(/* fns */) {
+    var fns = _.toArray(arguments);
+    return function(/* args */) {
+        var args = _.toArray(arguments);
+        return _.reduce(fn, function(fn, idx, init) {
+            return fn.apply(fn, init);
+        }, args);
+    };
+};
+
+
+// Test FSM
+var testfsm = {
+    stateA: { 
+        actions: {
+            event: [
+                function (globalState, evt, args) { if(evt === 'gotoB') return 'stateB'; },
+                function (globalState, evt, args) { return 'stateA1'; }
+            ]
+        },
+
+        substates: {
+            stateA1: { actions: {event: [] } }
+        }
+    },
+
+    stateB: {
+        actions: {
+            event: [
+                function (globalState, evt, args) { return 'stateA'; }
+            ]
+        }
+    }
+};
+
+
+
+/// FSM API
+
+   ////////////////////////////////////////////////////////////
+  /////  FSM Monad API  //////////////////////////////////////
+ ///  Operates on a fsmM, a reification of a FSM object.  ///
+////////////////////////////////////////////////////////////
+
+// Returns the fsm from the fsmM monad.
+var fsm = function(fsmM) {
+    return fsmM[0];
+};
+
+// Returns the current state from the fsmM monad.
+var state = function(fsmM) {
+    return fsmM[1];
+};
+
+// Returns the state history from the fsmM monad.
+var history = function(fsmM) {
+    return fsmM[2];
+};
+
+var appendToHistory = function(fsmM, stateName, globals, eventName, args) {
+    history(fsmM).append([stateName, globals, [eventName, args]]);
+};
+
+var getStateAt = function(fsmM, stateName) {
+    var finder = function(states, stateName) {
+        return _.reduce(states, function(res, state, name) {
+            if (name === stateName)
+                return state;
+            else if (_.exists(state.substates))
+                return finder(state.substates, stateName);
+            else
+                return res;
+        }, null);
+    };
+    return finder(fsm(fsmM), stateName);
+};
+
+var stateExists = function(fsmM, stateName) {
+    return _.exists(getStateAt(fsmM, stateName));
+};
+
+var getCurrentState = function(fsmM) {
+    return getStateAt(fsmM, state(fsmM).stateName);
+};
+
+var getAttributeOfState = function(stateName, attribute) {
+    return function(fsmM) {
+        return getStateAt(fsmM, stateName)[attribute];
+    };
+};
+
+var getAttributeOfCurrentState = function(attribute) {
+    return function(fsmM) {
+        return getCurrentState(fsmM)[attribute];
+    };
+};
+
+// Return the actions of the current state
+var currentStateActions = getAttributeOfCurrentState('actions');
+
+var getActions = function(fsmM, stateName, actionType) {
+    var actions = getAttributeOfState(stateName, 'actions')(fsmM);
+    if (actions) return actions[actionType];
+};
+
+var executeActions = function(actions, evt, args, globals) {
+    _.each(actions, function(action, idx) {
+        if (action) action(globals, evt, args);
+    });
+};
+
+
+
+      //////////////////
+     /// Public API ///
+    //////////////////
+
+
+// Reifies a FSM, returning a fsmM object which holds current and past state.
+var reify = exports.reify = function(fsm, initialStateName, globals) {
+    if (!_.exists(initialStateName)) throw new Error("Must supply initial state name");
+    if (_.falsey(globals))
+        globals = {};
+    var currentState = {stateName: initialStateName,
+                        globals: globals,
+                        lastEvent: [undefined, [/* args */]]};
+    var history = [];
+    return [fsm, currentState, history];
+};
+
+
+
+
+// Sends an event and its args to the fsm, returns updated fsmM.
+var send = exports.send = function(fsmM, evt /* args */) {
+    var args      = _.drop(_.toArray(arguments), 2),
+        globals   = state(fsmM).globals,
+        stateName = state(fsmM).stateName,
+        actions   = currentStateActions(fsmM),
+        result, newfsm, newCurrentState, newHistory;
+
+    var idx = 0;
+    while (_.exists(actions.event) && !_.exists(result)) {
+        var action = actions.event[idx];
+        if (action) result = action(globals, evt, args);
+        idx++;
+    }
+
+    // TK TODO: Execute exit and enter actions as we transition in and out
+    //          of superStates to or from a a nested subState. For now, we
+    //          only execute the actions of the source and destination states:
+    //
+    // If an action has returned a result, transition to it and execute actions:
+    if (_.exists(result) && stateExists(fsmM, result)) {
+        stateName = result;
+        var exitActions = getActions(fsmM, state(fsmM).stateName, 'exit');
+        var enterActions = getActions(fsmM, stateName, 'enter');
+        executeActions(exitActions, evt, args, globals);
+        executeActions(enterActions, evt, args, globals);
+    }
+
+    newfsm          = fsm(fsmM);
+    newCurrentState = {stateName: stateName,
+                       globals: globals,
+                       lastEvent: [evt, args]};
+    newhistory      = _.cons(state(fsmM), history(fsmM));
+
+    return [newfsm, newCurrentState, newhistory];
+};

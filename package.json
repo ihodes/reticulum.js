@@ -1,0 +1,14 @@
+{
+  "name"        : "reticulum",
+  "version"     : "0.1.0",
+  "author"      : "Isaac Hodes <isaachodes@gmail.com>",
+  "description" : "networked fsm",
+  "dependencies": {
+      "underscore":  "1.5.x",
+      "underscore-contrib": "0.1.4"
+  },
+  "devDependencies": {
+      "should": "1.2.2",
+      "vows": "0.7.0"
+  }
+}
