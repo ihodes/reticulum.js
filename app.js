@@ -75,8 +75,8 @@ var fsm = {
     stateA: { 
         actions: {
             event: [
-                function (globals, evt, args) { if(evt === 'gotoB') return 'stateB'; },
-                function (globals, evt, args) { return 'stateA1'; }
+                ["ifEqTransitionTo", "toB", "stateB"],
+                ["transitionTo", "stateA1"]
             ]
         },
 
@@ -85,7 +85,8 @@ var fsm = {
             stateA1: {
                 actions: {
                     enter: [
-                        function (globals, evt, args) { globals.magic = 1; }
+                        ["log"],
+                        ["incGlobal", "magic"]
                     ]
                 }
             }
@@ -96,7 +97,8 @@ var fsm = {
     stateB: {
         actions: {
             event: [
-                function (globals, evt, args) { return 'stateA'; }
+                ["log"],
+                ["transitionTo", "stateA"]
             ]
         }
     }

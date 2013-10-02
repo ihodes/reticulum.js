@@ -1,6 +1,7 @@
 var vows     = require('vows'),
     assert   = require('assert'),
-    should   = require('should');
+    should   = require('should'),
+    logger   = require('../lib/logger').logger;
 
 var reticulum = require('../lib/reticulum');
 
@@ -8,8 +9,8 @@ var testfsm = {
     stateA: { 
         actions: {
             event: [
-                function (globals, evt, args) { if(evt === 'gotoB') return 'stateB'; },
-                function (globals, evt, args) { return 'stateA1'; }
+                ["ifEqTransitionTo", "gotoB", "stateB"],
+                ["transitionTo", "stateA1"]
             ]
         },
 
@@ -18,7 +19,8 @@ var testfsm = {
             stateA1: {
                 actions: {
                     enter: [
-                        function (globals, evt, args) { globals.magic = 1; }
+                        ["log"],
+                        ["incGlobal", "magic"]
                     ]
                 }
             }
@@ -29,7 +31,7 @@ var testfsm = {
     stateB: {
         actions: {
             event: [
-                function (globals, evt, args) { return 'stateA'; }
+                ["transitionTo", "stateA"]
             ]
         }
     }
@@ -81,9 +83,9 @@ vows.describe('Operating with a FSM').addBatch({
         'a new fsmM should be returned with the new state and updated global': function(topic) {
             topic.should.be.an.instanceOf(Array);
             topic.should.includeEql(testfsm); // fsm
-            topic.should.includeEql({ stateName: 'stateA1', globals: {magic: 1},
+            topic.should.includeEql({ stateName: 'stateA1', globals: {magic: 0},
                                       lastEvent: ['a1go', []] }); // currentState
-            topic.should.includeEql([{ stateName: 'stateA', globals: {magic: 1},
+            topic.should.includeEql([{ stateName: 'stateA', globals: {magic: 0},
                                        lastEvent: [undefined, []] }]); // history
             should.exist(topic);
         }
