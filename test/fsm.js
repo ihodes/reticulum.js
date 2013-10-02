@@ -85,7 +85,7 @@ vows.describe('Operating with a FSM').addBatch({
             topic.should.includeEql(testfsm); // fsm
             topic.should.includeEql({ stateName: 'stateA1', globals: {magic: 0},
                                       lastEvent: ['a1go', []] }); // currentState
-            topic.should.includeEql([{ stateName: 'stateA', globals: {magic: 0},
+            topic.should.includeEql([{ stateName: 'stateA', globals: {},
                                        lastEvent: [undefined, []] }]); // history
             should.exist(topic);
         }
