@@ -9,6 +9,9 @@ require('express-namespace');
 require('underscore-contrib');
 var logger = logging.logger;
 
+var fsm  = require('./controllers/fsm'),
+    fsmM = require('./controllers/fsmM');
+
 
 // App init
 logger.info('Starting application...');
@@ -16,6 +19,7 @@ logger.info('Starting application...');
 var app = express();
 app.use(express.bodyParser());
 app.use(logging.requestLogger);
+app.use(express.errorHandler());
 
 // Routing
 app.all('/v1', function(req, res) {
@@ -24,33 +28,15 @@ app.all('/v1', function(req, res) {
 
 app.namespace('/v1', function() {
     app.namespace('/fsm', function() {
-        app.post('/reify', function(req, res) { 
-            // for now, just return the reified fsm
-            var fsmM = r.reify(fsm, 'stateA');
-            fsmDb.push(fsmM);
-            res.send({success: true, fsmM: fsmM, id: fsmDb.length-1});
-        });
-        app.get('/:fsmid', function(req, res) { 
-            var id   = parseInt(req.params.fsmid),
-                fsmM = fsmDb[id];
-            if (fsmM)
-                res.send({fsmM: fsmM, id: id});
-            else
-                res.status(404).send({error: 404})
-        });
-        app.post('/:fsmid/send/:event', function(req, res) { 
-            var id    = parseInt(req.params.fsmid),
-                event = req.params.event,
-                args  = req.body.args,
-                fsmM  = fsmDb[id];
+        app.get('/', fsm.allFsms);
+        app.post('/', fsm.createFsm);
+        app.get('/:fsmId', fsm.getFsm);
 
-            var fsmM1 = r.send(fsmM, event, args);
-            fsmDb[id] = fsmM1;
-
-            if (fsmM)
-                res.send({msg: 'msg recieved', event: event, args: args, fsmM: fsmM1});
-            else
-                res.status(404).send({error: 404})
+        app.namespace('/:fsmId', function() {
+            app.get('/all', fsmM.allFsmMs);
+            app.post('/reify', fsmM.reifyFsm);
+            app.get('/:fsmMId', fsmM.getFsmM);
+            app.post('/:fsmMId/send/:event', fsmM.sendEvent);
         });
     })
 });
@@ -65,14 +51,8 @@ app.listen(config.settings.PORT, function () {
 });
 
 
-
-// db
-var fsmDb = [];
-
-
-// stubs
-var fsm = {
-    stateA: { 
+var testfsm = {
+    stateA: {
         actions: {
             event: [
                 ["ifEqTransitionTo", "toB", "stateB"],
