@@ -20,6 +20,9 @@ var app = express();
 app.use(express.bodyParser());
 app.use(logging.requestLogger);
 app.use(express.errorHandler());
+app.engine('html', require('ejs').renderFile);
+app.set('views', __dirname + '/templates');
+app.use(express.static(__dirname + '/resources'));
 
 // Routing
 app.all('/v1', function(req, res) {
@@ -31,6 +34,9 @@ app.namespace('/v1', function() {
         app.get('/', fsm.allFsms);
         app.post('/', fsm.createFsm);
         app.get('/:fsmId', fsm.getFsm);
+
+        // html for displaying the FSM
+        app.get('/:fsmId/show', fsm.showFsm);
 
         app.namespace('/:fsmId', function() {
             app.get('/all', fsmM.allFsmMs);

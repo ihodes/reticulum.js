@@ -1,0 +1,1 @@
+{"fsm":{"stateA":{"actions":{"event":[["ifEqTransitionTo","gotoB","stateB"],["transitionTo","stateA1"]]},"substates":{"stateA1":{"actions":{"enter":[["log"],["incGlobal","magic"]]}}}},"stateB":{"actions":{"event":[["transitionTo","stateA"]]}}}}

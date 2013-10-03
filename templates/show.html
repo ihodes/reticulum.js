@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= id %>.fsm</title>
+    <script src="/js/d3.v3.min.js"></script>
+    <script src="/js/underscore-min.js"></script>
+
+    <style>
+      body { font: 10px sans-serif; }
+
+      .boxd { padding: 11px;
+              background: #f5f5f5; border: 1px solid #4d4d4d; }
+
+      pre { font-family: "Anonymous Pro"; font-size: 10px; }
+
+      circle:hover {
+        fill: #a0a0a0;
+      }
+
+      text {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -khtml-user-select: none;
+        -ms-user-select: none
+        -o-user-select: none;
+        user-select: none;
+
+        cursor: default;
+      }
+    </style>
+  </head>
+  <body>
+    <h4>Diagram</h4>
+    <div id="diag" class="boxd">
+      <img src="/imgs/loader.gif" alt="loader" class="loading">
+    </div>
+    
+    <h4>JSON repr</h4>
+    <pre id="text" class="boxd"><img src="/imgs/loader.gif" alt="loader"></pre>
+  </body>
+  <script>
+    var displayFsm = function (fsm) {
+    
+      var svg = d3.select("#diag").append("svg:svg").attr("height", 200);
+      var states = svg.selectAll("circle").data(_.keys(fsm));
+      var labels = svg.selectAll("text").data(_.keys(fsm));
+
+      var radius = 50, spacing = 20;
+
+      states.enter().append("circle")
+        .attr("cy", function(d, idx) { return radius + spacing; })
+        .attr("cx", function(d, idx) { return (idx + 1) * radius*2 + spacing * idx; })
+        .attr("fill", "#aeaeae").attr("stroke", "black").attr("stroke-width", 1)
+        .attr("r", radius);
+
+      labels.enter().append("text")
+        .text(function (d) { return d; })
+        .attr("y", function(d, idx) { return radius + spacing + 4; }) // center
+        .attr("x", function(d, idx) { return (idx + 1) * radius*2 + spacing * idx; })
+        .attr("font-family", "sans-serif")
+          .attr("font-size", "11px")
+          .attr("fill", "white")
+          .attr("text-anchor", "middle")
+    
+      d3.select(".loading").style("display", "none");
+    };
+
+    var fsm;
+    d3.json("/v1/fsm/<%= id %>", function(error, json) {
+      if (error) {
+        d3.select('pre').text("404 NOT FOUND");
+        return console.warn(error);
+      }
+
+      fsm = json.fsm;
+      d3.select('pre').text(JSON.stringify(fsm, undefined, 2));
+
+      displayFsm(fsm);
+    });
+
+    var substatesToChildren = function(fsm) {
+      for (var k in fsm) {
+        if (fsm[k].substates) {
+          fsm[k].children = fsm[k].substates;
+          substatesToChildren(fsm[k].substates);
+        }
+      }
+    };
+  </script>
+</html>

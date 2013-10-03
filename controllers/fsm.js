@@ -33,3 +33,13 @@ exports.createFsm = function(req, res) {
 exports.getFsm = function(req, res) {
     fsm.getFsm(req.params.fsmId, U.sendBack(res, cleaner));
 };
+
+
+
+  /////////////////////////
+ //// HTML stuff hurr ////
+/////////////////////////
+
+exports.showFsm = function(req, res) {
+    res.render('show.html', {id: req.params.fsmId});
+};
