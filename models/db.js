@@ -16,17 +16,17 @@ var fsmSchema = new mongoose.Schema({
 });
 fsmSchema.post('save', function(doc) {
     logger.info('Saved fsm: ' + JSON.stringify(doc.toObject()));
-});
+}, { minimize: false });
 exports.fsm = mongoose.model('fsm', fsmSchema);
 
 
 var fsmMSchema = new mongoose.Schema({
     createdAt:    {type: Date, default: Date.now},
 
-    fsmId: {type: ObjectId, ref: 'fsm', required: true},
+    fsm: {type: ObjectId, ref: 'fsm', required: true},
     currentState: {type: Object, required: true},
-    history: [{type: Object}]
-});
+    history: []
+}, { minimize: false });
 fsmMSchema.post('save', function(doc) {
     logger.info('Saved fsmM: ' + JSON.stringify(doc.toObject()));
 });

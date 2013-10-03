@@ -10,8 +10,8 @@ var _      = require('underscore'),
 
 
 var API = {
-    publicFields: {_id: U._idToId, currentState: null, history: null, fsmId: null},
-    reifyParams: {}
+    publicFields: { _id: U._idToId, currentState: null, history: null, fsm: null },
+    reifyParams: { initialStateName: true }
 };
 var cleaner = loch.allower(API.publicFields);
 var reifyValidator = _.partial(loch.validates, API.reifyParams);

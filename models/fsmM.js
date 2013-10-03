@@ -14,13 +14,11 @@ exports.allFsmMs = function(params, callback) {
 
 exports.reifyFsm = function(fsmId, params, callback) {
     db.fsm.findOne({_id: fsmId}, function(err, fsm) {
-        if (!fsm) return callback(err, null);
-        var fsm = fsm.toObject()['fsm']
-        var fsmM = reticulum.reify(fsm, 'stateA'); // TK TODO set initial state somewhere
-
-        var fsmMfields = {fsmId: fsmId, currentState: fsmM[1], history: fsmM[2]};
-        logger.debug("FSMM", JSON.stringify(fsmMfields));
-        db.fsmM(fsmMfields).save(callback);
+        if (err || !fsm) return callback(err, null);
+        var fsm          = fsm.toObject()['fsm']
+        var fsmM         = reticulum.reify(fsm, params.initialStateName);
+        var updateFields = {fsm: fsmId, currentState: fsmM[1], history: fsmM[2]};
+        db.fsmM(updateFields).save(callback);
     });
 };
 
@@ -29,21 +27,14 @@ exports.getFsmM = function(fsmMId, params, callback) {
 };
 
 exports.sendEvent = function(fsmMId, fsmId, evt, params, callback) {
-    db.fsmM.findOne({_id: fsmMId}, function(err, fsmM) {
-        db.fsm.findOne({_id: fsmId}, function(err, fsm) {
-            /// WTF. TK TODO
-            logger.debug('fsmM '+JSON.stringify(fsmM));
-            return callback(err, fsmM);
-
-            // var ff = fsmM;
-            // var dbFsmM = fsmM.toObject();
-            // var fsm = fsm.toObject();
-            // var fsmM = [fsm, dbfsm.currentState, dbfsm.history];
-
-            // var nextFsm = reticulum.send(fsmM, evt, []); // TK TODO put args here
-            // logger.info('here')
-            // db.fsmM.update({currentState: nextFsm.currentState,
-            //                 history: nextFsm.history}, callback);
-        });
-    });
+    db.fsmM.findOne({_id: fsmMId})
+      .populate('fsm')
+      .exec(function(err, fsmM) {
+          if (err || !fsmM) return callback(err, null);
+          var fsm          = fsmM.fsm.fsm;
+          var currFsmM     = [fsm, fsmM.currentState, fsmM.history];
+          var nextFsmM     = reticulum.send(currFsmM, evt, params.args);
+          var updateFields = {history: nextFsmM[2], currentState: nextFsmM[1]};
+          db.fsmM.findByIdAndUpdate(fsmM._id, updateFields, callback);
+      });
 };
