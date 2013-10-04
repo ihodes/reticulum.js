@@ -30,6 +30,11 @@ exports.createFsm = function(req, res) {
     fsm.createFsm(req.body, U.sendBack(res, 201, cleaner));
 };
 
+exports.updateFsm = function(req, res) {
+    // TK TODO validate here
+    fsm.updateFsm(req.params.fsmId, req.body, U.sendBack(res, cleaner));
+};
+
 exports.getFsm = function(req, res) {
     fsm.getFsm(req.params.fsmId, U.sendBack(res, cleaner));
 };

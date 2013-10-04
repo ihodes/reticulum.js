@@ -33,6 +33,7 @@ app.namespace('/v1', function() {
     app.namespace('/fsm', function() {
         app.get('/', fsm.allFsms);
         app.post('/', fsm.createFsm);
+        app.put('/:fsmId', fsm.updateFsm);
         app.get('/:fsmId', fsm.getFsm);
 
         // html for displaying the FSM
