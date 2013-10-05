@@ -1,0 +1,53 @@
+{
+    "name": "customer",
+    "description": "describes a customer's actions",
+    "group": "uber",
+    "user": "uber",
+    "initialState": "idle",
+
+    "fsm": {
+        "idle": {
+            "actions": {
+                "event": [
+                    ["ifEqTransitionTo", "requestRide", "waitingForResponse"]
+                ]
+            }
+        },
+        "waitingForResponse": {
+            "actions": {
+                "event": [
+                    ["ifEqTransitionTo", "driverResponding", "waitingForArrival"]
+                ],
+                "enter": [
+                    ["riefy", "rides",
+                     "customerId::.id", "location::.geoLoc"]
+                ]
+            }
+        },
+        "waitingForArrival": {
+            "actions": {
+                "event": [
+                    ["listen", "driverLocation", ".driverLocation"],
+                    ["ifEqTransitionTo", "pickedUp", "beingDriven"]
+                ],
+                "exit": [
+                    ["stoplisten", "driverLocation"]
+                ]
+            }
+        },
+        "beingDriven": {
+            "actions": {
+                "event": [
+                    ["ifEqTransitionTo", "droppedOff", "arrived"]
+                ]
+            }
+        },
+        "arrived": {
+            "actions": {
+                "event": [
+                    ["ifEqTransitionTo", "feedbackSent", "idle"]
+                ]
+            }
+        }
+    }
+}

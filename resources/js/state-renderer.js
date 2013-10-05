@@ -12,7 +12,11 @@ var displayFsm = function (fsm, initialState, currentState) {
         var links = []
         if (val.actions && val.actions.event) {
             _.each(val.actions.event, function(evt) {
-                links.push({source: key, target: _.last(evt), type: _.first(evt)});
+                console.log(_.first(evt))
+                // TK TODO: split out transitions and events etc.
+                //          (don't hardcode here and below)
+                if(_.contains(['ifEqTransitionTo', 'transitionTo'], _.first(evt)))
+                    links.push({source: key, target: _.last(evt), type: _.first(evt)});
             });
         }
         return links;
@@ -25,6 +29,7 @@ var displayFsm = function (fsm, initialState, currentState) {
         link.source = nodes[link.source] || (nodes[link.source] = {name: link.source});
         link.target = nodes[link.target] || (nodes[link.target] = {name: link.target});
     });
+    window.nodes = nodes;
 
     var force = d3.layout.force()
       .nodes(d3.values(nodes))

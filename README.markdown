@@ -1,8 +1,6 @@
 See `docs.md` for documentation. More to come. 
 
-To set up, `cp .envTemplate .env`, make sure you have foreman installed via the heroku toolbelt, `npm install` deps, and run with `make`.
-
-Test with `vows test/* --spec`. Need vows in order to run tests `npm install vows -g`.
+To set up, `cp .envTemplate .env`, make sure you have foreman installed via the heroku toolbelt, `npm install` deps, and run with `make`. Test with `make test`. Need vows in order to run tests (`npm install vows -g`).
 
 ##### Todo: 
 
