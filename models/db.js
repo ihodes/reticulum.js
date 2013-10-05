@@ -13,10 +13,15 @@ var ObjectId = mongoose.Schema.ObjectId;
 var fsmSchema = new mongoose.Schema({
     createdAt:    {type: Date, default: Date.now},
     fsm:          {type: Object},
-});
+    initialState: {type: String},
+    name:         {type: String},
+    description:  {type: String},
+    user:         {type: String},
+    group:        {type: String} // logical group for interstate communication
+}, { minimize: false });
 fsmSchema.post('save', function(doc) {
     logger.info('Saved fsm: ' + JSON.stringify(doc.toObject()));
-}, { minimize: false });
+});
 exports.fsm = mongoose.model('fsm', fsmSchema);
 
 

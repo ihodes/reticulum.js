@@ -3,7 +3,8 @@
 var _      = require('underscore'),
     db     = require('./db'),
     config = require('../config'),
-    utils  = require('../lib/utils');
+    utils  = require('../lib/utils'),
+    logger = require('../lib/logger').logger;
 
 
 exports.allFsms = function(params, callback) {
@@ -11,7 +12,7 @@ exports.allFsms = function(params, callback) {
 };
 
 exports.createFsm = function(params, callback) {
-    db.fsm({fsm: params.fsm}).save(callback);
+    db.fsm(params).save(callback);
 };
 
 exports.updateFsm = function(fsmId, params, callback) {
@@ -19,5 +20,5 @@ exports.updateFsm = function(fsmId, params, callback) {
 };
 
 exports.getFsm = function(fsmId, callback) {
-    db.fsm.findOne({_id: fsmId}, callback);
+    db.fsm.findById(fsmId, callback);
 };

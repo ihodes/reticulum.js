@@ -10,8 +10,13 @@ var _      = require('underscore'),
 require('underscore-contrib');
 
 var API = {
-    publicFields: {_id: U._idToId, fsm: null},
-    createParams: {fsm: [true, _.always(true)]} // TK TODO need to do actual FSM validation.
+    publicFields: {_id: U._idToId, fsm: null, name: null, group: null,
+                   initialState: null, description: null},
+
+    // TK TODO need to do actual FSM validation.
+    createParams: {fsm: [true, _.always(true)], name: true,
+                   description: false, user: false, group: false,
+                   initialState: false}
 };
 var cleaner = loch.allower(API.publicFields);
 var createValidator = _.partial(loch.validates, API.createParams);
@@ -31,7 +36,9 @@ exports.createFsm = function(req, res) {
 };
 
 exports.updateFsm = function(req, res) {
-    // TK TODO validate here
+    var errors = createValidator(req.body);
+    if(_.isObject(errors))
+        return U.error(res, U.ERRORS.badRequest, {errors: errors});
     fsm.updateFsm(req.params.fsmId, req.body, U.sendBack(res, cleaner));
 };
 
@@ -46,5 +53,5 @@ exports.getFsm = function(req, res) {
 /////////////////////////
 
 exports.showFsm = function(req, res) {
-    res.render('show.html', {id: req.params.fsmId});
+    res.render('show.html', {id: req.params.fsmId, fsmMId: ''});
 };

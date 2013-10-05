@@ -1,11 +1,12 @@
-var displayFsm = function (fsm) {
+var displayFsm = function (fsm, initialState, currentState) {
     var radius = 25,
         spc    = 30,
         height = 300,
         width  = 800;
     
     var svg = d3.select("#diag").append("svg:svg")
-        .attr("height", height).attr("width", "100%");
+        .attr("height", height).attr("width", "100%")
+        .style("display", "none");
 
     var links = _.map(fsm, function(val, key) { 
         var links = []
@@ -36,7 +37,7 @@ var displayFsm = function (fsm) {
     
     // Per-type markers, as they don't inherit styles.
     svg.append("svg:defs").selectAll("marker")
-        .data(["transitionTo", "ifEqTransitionTo"])
+        .data(["transitionTo", "ifEqTransitionTo", "ifGeoEvent"])
       .enter().append("svg:marker")
         .attr("id", String)
         .attr("viewBox", "0 -5 10 10")
@@ -55,8 +56,15 @@ var displayFsm = function (fsm) {
         .attr("marker-end", function(d) { return "url(#" + d.type + ")"; });
     
     var circle = svg.append("svg:g").selectAll("circle")
-        .data(force.nodes())
-        .enter().append("svg:circle")
+        .data(force.nodes()).enter()
+      .append("svg:circle")
+        .attr("class", function (d) {
+            if (d.name === currentState)
+                return "current";
+            else if (d.name === initialState)
+                return "initial";
+            else return "";
+        })
         .attr("r", 12)
         .call(force.drag);
     
@@ -75,7 +83,6 @@ var displayFsm = function (fsm) {
         .attr("x", 8)
         .attr("y", ".31em")
         .text(function(d) { return d.name; });
-    
 
     // Use elliptical arc path segments to doubly-encode directionality.
     function tick() {
@@ -95,6 +102,7 @@ var displayFsm = function (fsm) {
         });
     }
     
-    
+    // remove the loading gif once we get here...
     d3.select(".loading").style("display", "none");
+    d3.select("svg").style("display", "block");
 };

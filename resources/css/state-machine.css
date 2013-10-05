@@ -1,0 +1,50 @@
+path.link {
+    fill: none;
+    stroke: #666;
+    stroke-width: 1.5px;
+}
+
+marker#transitionTo {
+    fill: blue;
+}
+
+marker#ifGeoEvent {
+    fill: green;
+}
+
+path.link.transitionTo {
+    stroke: blue;
+}
+
+path.link.ifEqTransitionTo {
+    stroke-dasharray: 0,2 1;
+}
+
+path.link.ifGeoEvent {
+    stroke: green;
+}
+
+circle {
+    fill: #ccc;
+    stroke: #333;
+    stroke-width: 1.5px;
+}
+
+circle.initial {
+    fill: #333;
+}
+
+circle.current {
+    fill: gold;
+}
+
+text {
+    font: 10px sans-serif;
+    pointer-events: none;
+}
+
+text.shadow {
+    stroke: #fff;
+    stroke-width: 3px;
+    stroke-opacity: .8;
+}

@@ -15,15 +15,17 @@ exports.allFsmMs = function(params, callback) {
 exports.reifyFsm = function(fsmId, params, callback) {
     db.fsm.findOne({_id: fsmId}, function(err, fsm) {
         if (err || !fsm) return callback(err, null);
-        var fsm          = fsm.toObject()['fsm']
-        var fsmM         = reticulum.reify(fsm, params.initialStateName);
+        var initialState = fsm.initialState;
+        var fsm          = fsm.toObject()['fsm'];
+        initialState     = params.initialStateName || initialState;
+        var fsmM         = reticulum.reify(fsm, initialState);
         var updateFields = {fsm: fsmId, currentState: fsmM[1], history: fsmM[2]};
         db.fsmM(updateFields).save(callback);
     });
 };
 
 exports.getFsmM = function(fsmMId, params, callback) {
-    db.fsmM.findOne({_id: fsmMId}, callback);
+    db.fsmM.findById(fsmMId, callback);
 };
 
 exports.sendEvent = function(fsmMId, fsmId, evt, params, callback) {

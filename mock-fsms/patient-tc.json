@@ -1,0 +1,58 @@
+{
+    "name": "customer",
+    "description": "describes a customer's actions",
+    "group": "techcare",
+    "user": "techcare",
+    "initialState": "idle",
+
+    "fsm": {
+        "idle": {
+            "actions": {
+                "event": [
+                    ["ifEqTransitionTo", "requestVisit", "waitingForResponse"]
+                ]
+            }
+        },
+        "waitingForResponse": {
+            "actions": {
+                "event": [
+                    ["ifEqTransitionTo", "doctorReporting", "waitingForArrival"]
+                ],
+                "enter": [
+                    ["messageBus", "visits",
+                     "patientId::.id", "location::.locations.selected"]
+                ]
+            }
+        },
+        "waitingForArrival": {
+            "actions": {
+                "event": [
+                    ["listen", "doctorLocation", ".doctorLocation"]
+                    ["ifEqTransitionTo", "doctorArrived", "beingTreated"]
+                ],
+                "exit": [
+                    ["stoplisten", "doctorLoction"]
+                ]
+            }
+        },
+        "beingTreated": {
+            "actions": {
+                "event": [
+                    ["ifEqTransitionTo", "treatmentDone", "treated"]
+                ]
+            }
+        },
+        "treated": {
+            "actions": {
+                "event": [
+                    ["ifEqTransitionTo", "feedbackSent", "idle"]
+                ],
+                "exit":  [
+                    ["messageBus", "patientFeedback",
+                     "patientId::.id", "doctorId::.visit.doctorId"],
+                    ["clear", ".visit"]
+                ]
+            }
+        }
+    }
+}

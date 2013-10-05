@@ -44,6 +44,9 @@ app.namespace('/v1', function() {
             app.post('/reify', fsmM.reifyFsm);
             app.get('/:fsmMId', fsmM.getFsmM);
             app.post('/:fsmMId/send/:event', fsmM.sendEvent);
+
+            // html for displaying the fsmM (similar to showFsm)
+            app.get('/:fsmMId/show', fsmM.showFsmM);
         });
     })
 });

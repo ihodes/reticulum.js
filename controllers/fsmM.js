@@ -11,7 +11,7 @@ var _      = require('underscore'),
 
 var API = {
     publicFields: { _id: U._idToId, currentState: null, history: null, fsm: null },
-    reifyParams: { initialStateName: true }
+    reifyParams: { initialStateName: false }
 };
 var cleaner = loch.allower(API.publicFields);
 var reifyValidator = _.partial(loch.validates, API.reifyParams);
@@ -28,7 +28,6 @@ exports.reifyFsm = function(req, res) {
     if(_.isObject(errors))
         return U.error(res, U.ERRORS.badRequest, {errors: errors});
     fsmM.reifyFsm(req.params.fsmId, req.body, U.sendBack(res, 201, cleaner));
-
 };
 
 exports.getFsmM = function(req, res) {
@@ -38,4 +37,14 @@ exports.getFsmM = function(req, res) {
 exports.sendEvent = function(req, res) {
     fsmM.sendEvent(req.params.fsmMId, req.params.fsmId, req.params.event,
                    req.body, U.sendBack(res, cleaner));
+};
+
+
+
+  /////////////////////////
+ //// HTML stuff hurr ////
+/////////////////////////
+
+exports.showFsmM = function(req, res) {
+    res.render('show.html', {id: req.params.fsmId, fsmMId: req.params.fsmMId});
 };

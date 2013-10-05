@@ -5,68 +5,61 @@
     <script src="/js/d3.v3.min.js"></script>
     <script src="/js/underscore-min.js"></script>
     <script src="/js/state-renderer.js"></script>
+    <link rel="stylesheet" href="/css/state-machine.css">
 
     <style>
       body { font: 10px sans-serif; }
 
-      .boxd { padding: 11px;
-              background: #f5f5f5; border: 1px solid #4d4d4d; }
+      .boxd { padding: 11px; background: #f5f5f5; border: 1px solid #4d4d4d; }
       
       #diag { width: 100%; height: auto; padding: 0px; }
 
       pre { font-family: "Anonymous Pro"; font-size: 10px; }
-
-      path.link {
-        fill: none;
-        stroke: #666;
-        stroke-width: 1.5px;
-      }
-      
-      marker#transitionTo {
-        fill: blue;
-      }
-      
-      path.link.transitionTo {
-        stroke: blue;
-      }
-      
-      path.link.ifEqTransitionTo {
-        stroke-dasharray: 0,2 1;
-      }
-      
-      circle {
-        fill: #ccc;
-        stroke: #333;
-        stroke-width: 1.5px;
-      }
-      
-      text {
-        font: 10px sans-serif;
-        pointer-events: none;
-      }
-      
-      text.shadow {
-        stroke: #fff;
-        stroke-width: 3px;
-        stroke-opacity: .8;
-      }
     </style>
   </head>
   <body>
-    <script>d3.json("/v1/fsm/<%= id %>", function(error, json) {
-  if (error) {
-    d3.select('pre').text("404 NOT FOUND");
-    return console.warn(error);
-  }
-    
-  var fsm = json.fsm;
-  window.fsm = fsm;
-  d3.select('pre').text(JSON.stringify(fsm, undefined, 2));
+    <script>
+    function capitalize(str) { return str.charAt(0).toUpperCase() + str.slice(1); }
 
-  displayFsm(fsm);
-});</script>
+    function prepareDisplay(fsmJson, currentState, globals) {
+      d3.select('pre')
+        .text(JSON.stringify(fsmJson.fsm, undefined, 2));
+      d3.select('h2')
+        .text(capitalize(fsmJson.name));
+      d3.select('#info')
+        .text(JSON.stringify(fsmJson, ['name','initialState','group'], 2)
+              +" // "+
+              JSON.stringify(globals, undefined, 2));
+      displayFsm(fsmJson.fsm, fsmJson.initialState, currentState);
+    }
+
+    d3.json("/v1/fsm/<%= id %>", function(error, fsmJson) {
+      if (error) {
+        d3.select('pre').text("404 NOT FOUND");
+        return console.warn(error);
+      } else {
+        if(!_.isEmpty("<%= fsmMId %>")) {
+          d3.json("/v1/fsm/<%= id %>/<%= fsmMId %>", function(error, fsmMJson) {
+            prepareDisplay(fsmJson, fsmMJson.currentState.stateName,
+                                    fsmMJson.currentState.globals);
+          });
+        } else {
+            prepareDisplay(fsmJson);
+        }
+      }
+    });
+    </script>
+
+    <h2></h2>
     <h4>Diagram</h4>
     <div id="diag" class="boxd">
+      <img src="/imgs/loader.gif" alt="loader" class="loading" style="padding: 20px;">
+    </div>
+    <p>
+      The initial state is indicated by a <b style="color:#333;">dark grey</b> node. A <b style="color:gold;">gold</b> node indicates the current state. <b style="color:green;">Green</b> transitions represent GeoEvents, and <b style="#666; border-bottom: 1px dotted #666;">grey dotted</b> transitions occur given a specific event name recieved.
+    </p>
+    <h4>Info</h4>
+    <div id="info" class="boxd">
       <img src="/imgs/loader.gif" alt="loader" class="loading">
     </div>
     <br>
