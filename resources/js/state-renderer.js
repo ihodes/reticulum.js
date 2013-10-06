@@ -1,21 +1,22 @@
 var displayFsm = function (fsm, initialState, currentState) {
+    // TK UNHACX should factor this out somewhere more central
+    var transitions = ['ifEqTransitionTo', 'transitionTo', 'ifGeoEvent'];
+
     var radius = 25,
         spc    = 30,
         height = 300,
         width  = 800;
-    
+
     var svg = d3.select("#diag").append("svg:svg")
         .attr("height", height).attr("width", "100%")
         .style("display", "none");
 
     var links = _.map(fsm, function(val, key) { 
-        var links = []
+        var links = [];
         if (val.actions && val.actions.event) {
             _.each(val.actions.event, function(evt) {
                 console.log(_.first(evt))
-                // TK TODO: split out transitions and events etc.
-                //          (don't hardcode here and below)
-                if(_.contains(['ifEqTransitionTo', 'transitionTo'], _.first(evt)))
+                if(_.contains(transitions, _.first(evt)))
                     links.push({source: key, target: _.last(evt), type: _.first(evt)});
             });
         }
@@ -42,7 +43,7 @@ var displayFsm = function (fsm, initialState, currentState) {
     
     // Per-type markers, as they don't inherit styles.
     svg.append("svg:defs").selectAll("marker")
-        .data(["transitionTo", "ifEqTransitionTo", "ifGeoEvent"])
+        .data(transitions)
       .enter().append("svg:marker")
         .attr("id", String)
         .attr("viewBox", "0 -5 10 10")

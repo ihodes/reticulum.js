@@ -33,11 +33,14 @@ app.namespace('/v1', function() {
     app.namespace('/fsm', function() {
         app.get('/', fsm.allFsms);
         app.post('/', fsm.createFsm);
+
+        // html for displaying the FSMs
+        app.get('/all', fsm.listFsms);
+        app.get('/:fsmId/show', fsm.showFsm);
+
+        // specific fsms
         app.put('/:fsmId', fsm.updateFsm);
         app.get('/:fsmId', fsm.getFsm);
-
-        // html for displaying the FSM
-        app.get('/:fsmId/show', fsm.showFsm);
 
         app.namespace('/:fsmId', function() {
             app.get('/all', fsmM.allFsmMs);

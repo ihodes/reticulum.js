@@ -51,6 +51,11 @@ exports.getFsm = function(req, res) {
   /////////////////////////
  //// HTML stuff hurr ////
 /////////////////////////
+exports.listFsms = function(req, res) {
+    fsm.allFsms(req.params, U.sendBack(res, function(results) {
+        return res.render('all.html', {fsms: _.map(results, cleaner)});
+    }));
+};
 
 exports.showFsm = function(req, res) {
     res.render('show.html', {id: req.params.fsmId, fsmMId: ''});
