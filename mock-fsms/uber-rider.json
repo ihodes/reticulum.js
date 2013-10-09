@@ -1,53 +1,57 @@
 {
     "name": "customer",
-    "description": "describes a customer's actions",
-    "group": "uber",
-    "user": "uber",
-    "initialState": "idle",
-
-    "fsm": {
-        "idle": {
-            "actions": {
-                "event": [
-                    ["ifEqTransitionTo", "requestRide", "waitingForResponse"]
-                ]
+    "initialState": "Idle",
+    "states": [
+        { "name" : "Idle",
+          "actions": {
+              "event": [ [["if", "eq", "requestRide"],
+                          ["reify", "Ride", ".currentRide",
+                           "location::..location",
+                           "customerId::.id",
+                           "carType::..carType"],
+                          "WaitingForResponse"]
+                       ]
+          }
+        },
+        { "name" : "WaitingForResponse",
+          "actions": {
+              "event": [ 
+                  [["if", "eq", "rideAccepted"],
+                   "WaitingForPickup"],
+                  [["if", "eq", "cancel"],
+                   ["send", "Ride", ".currentRide.id", "cancel"],
+                   ["clear" ".currentRide"]
+                   "Idle"]
+              ],
             }
         },
-        "waitingForResponse": {
-            "actions": {
-                "event": [
-                    ["ifEqTransitionTo", "driverResponding", "waitingForArrival"]
-                ],
-                "enter": [
-                    ["riefy", "rides",
-                     "customerId::.id", "location::.geoLoc"]
-                ]
-            }
+        { "name" : "WaitingForPickup",
+          "actions": {
+              "event": [ [["if", "eq", "pickedUp"] "InCar"],
+                         [["if", "eq", "driverCancelled"] "WaitingForResponse"],
+                         [["if", "eq", "cancel"],
+                          ["send", "Ride", ".currentRide.id", "cancel"],
+                          ["clear", ".currentRide"],
+                          "Idle"]
+                       ]
+          }
         },
-        "waitingForArrival": {
-            "actions": {
-                "event": [
-                    ["listen", "driverLocation", ".driverLocation"],
-                    ["ifEqTransitionTo", "pickedUp", "beingDriven"]
-                ],
-                "exit": [
-                    ["stoplisten", "driverLocation"]
-                ]
-            }
+        { "name" : "InCar",
+          "actions": {
+              "event": [ [["if", "eq", "droppedOff"] "Arrived"] ]
+          }
         },
-        "beingDriven": {
-            "actions": {
-                "event": [
-                    ["ifEqTransitionTo", "droppedOff", "arrived"]
-                ]
-            }
-        },
-        "arrived": {
-            "actions": {
-                "event": [
-                    ["ifEqTransitionTo", "feedbackSent", "idle"]
-                ]
-            }
+        { "name" : "Arrived", 
+          "actions": {
+              "event": [ [["if", "eq", "sentFeedback"],
+                          ["request", "post", ["@UberWebhookUrl", "/feedback"],
+                           "feedback::..feedback",
+                           "rideId::.currentRide.id",
+                           "customerId::.id"],
+                          "Idle"] 
+                       ],
+              "exit": [ ["clear" ".currentRide"] ]
+          }
         }
-    }
+    ]
 }

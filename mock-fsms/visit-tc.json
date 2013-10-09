@@ -1,0 +1,62 @@
+{
+    "name": "visit",
+    "initialState": "Created",
+    "actions" : {
+        "event" : [ [["if", "eq", "updateDoctorLocation"],
+                     ["set", ".doctorLocation", "..location"]] ]
+    },
+    "states": [
+        { "name" : "Created",
+          "actions": {
+              "enter": [ [["set", ".doctorId", "..doctorId"],
+                          ["send", "Doctor", ".doctorId", "visitRequest",
+                           "patientId::.patientId",
+                           "location::.location"]] ]
+              "event": [ [["if", "eq", "cancel"],
+                          "Cancelled"],
+                         [["if", "eq", "accept"],
+                          "Accepted"],
+                         [["if", "eq", "declined"],
+                          ["send", "Patient", ".patientId", "doctorCancelled"],
+                          "Declined"]
+                       ]
+          }
+        },
+        { "name" : "Accepted",
+          "actions": {
+              "event": [
+                  [["if", "eq", "arrived"],
+                   "InProgress"],
+                  [["if", "eq", "cancel"],
+                   ["send", "Doctor", ".doctorId", "cancel"]
+                   "CancelledEnRoute"],
+                  [["if", "eq", "decline"],
+                   ["send", "Patient", ".patientId", "doctorCancelled"],
+                   ["clear", ".doctorId"],
+                   "Created"]
+              ],
+            }
+        },
+        { "name" : "InProgress",
+          "actions": {
+              "event": [
+                  [["if", "eq", "finished"],
+                   ["send", "Patient", ".patientId", "treated"],
+                   "Complete"]
+              ],
+            }
+        },
+        { "name" : "Complete",
+          "actions": {
+              "enter": [ [["send", "Biller", "@billerid", "visitCompleted", "visit::.id"]] ]
+          }
+        },
+        { "name" : "CancelledEnRoute",
+          "actions": {
+              "enter": [ [["send", "Biller", "@billerid", "visitCancelled", "visit::.id"]] ]
+          }
+        },
+        { "name" : "Cancelled" },
+        { "name" : "Declined" }
+    ]
+}

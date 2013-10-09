@@ -1,62 +1,60 @@
 {
     "name": "doctor",
-    "description": "describes a doctor's actions",
-    "group": "techcare",
-    "user": "techcare",
-    "initialState": "offCall",
-
-    "fsm": {
-        "offCall": {
-            "actions": {
-                "event": [
-                    ["ifEqTransitionTo", "goOnCall", "onCall"]
-                ]
-            }
+    "initialState": "OffCall",
+    "states": [
+        { "name" : "OffCall",
+          "actions" : {
+              "event" : [ [["if", "eq", "goOnCall"], "OnCall"] ]
+          }
         },
-        "onCall": {
-            "actions": {
-                "event": [
-                    ["ifEqTransitionTo", "goOffCall", "offCall"],
-                    ["ifEqTransitionTo", "acceptVisit", "enRoute"]
-                ]
-            }
-        },
-        "enRoute": {
-            "actions": {
-                "event": [
-                    ["ifGeoEvent", "proximal", ".geoloc", ".visit.location", "arrived"]
-                ],
-                "enter": [
-                    ["startContinuousMessage", ".visit.patientId",
-                     "doctorLocation", ".geoloc"]
-                ]
-            }
-        },
-        "arrived": {
-            "actions": {
-                "event": [
-                    ["ifEqTransitionTo", "done", "done"]
-                ],
-                "enter": [
-                    ["stopContinuousMessage", ".visit.patientId",
-                     "doctorLocation"],
-                    ["message", ".visit.patientId", "doctorArrived"]
-                ],
-                "exit": [
-                    ["message", ".visit.patientId", "treatmentDone"]
-                ]
-            }
-        },
-        "done": {
-            "actions": {
-                "event": [
-                    ["ifEqTransitionTo", "feedbackSent", "onCall"]
-                ],
-                "exit":  [
-                    ["messageBus", "doctorFeedback", "doctorId::.id", "patientId::.visit.patientId"],
-                    ["clear", ".visit"]
-                ]
-            }
+        { "name" : "OnCall",
+          "initialState" : "Idle",
+          "actions" : {
+              "event" : [ [["if", "eq", "updateLocation"],
+                           ["set", ".location", "..location"],
+                           ["send", "Visit", ".visit.id", "updateDoctorLocation", "location::.location"]] ]
+          },
+          "states" : [
+              { "name" : "Idle",
+                "actions": {
+                    "event": [ [["if", "eq", "accept"],
+                                ["send", "Visit", "..visit.id", "accept", "doctorId::.id"],
+                                ["set", ".currentVisit", "..visit"],
+                                "EnRoute"],
+                               [["if", "eq", "goOffDuty"], "OffDuty"] ],
+                    "enter": [ [["clear", ".currentVisit"]] ]
+                }
+              },
+              { "name" : "EnRoute",
+                "actions": {
+                    "event": [ [["if", "eq", "arrived"],
+                                ["send", "Visit", ".currentVisit.id", "arrived"],
+                                "Treating"],
+                               [["if", "eq", "decline"], // doctor cancels visit
+                                ["send", "Visit", ".currentVisit.id", "decline"],
+                                "Idle"],
+                               [["if", "eq", "cancel"], // patient cancels visit
+                                "Idle"] ]
+                }
+              },
+              { "name" : "Treating",
+                "actions": {
+                    "event" : [ [["if", "eq", "finished"],
+                                 ["send", "Visit", ".currentVisit.id", "finished"],
+                                 "FinishedTreating"], ]
+                }
+              },
+              { "name" : "FinishedTreating",
+                "actions": {
+                    "event": [ [["if", "eq", "sendFeedback"],
+                                ["request", "post", ["@TechCareWebhookUrl", "/feedback"],
+                                 "feedback::..feedback",
+                                 "visitId::.currentVisit.id",
+                                 "doctorId::.id"],
+                                "Idle"], ]
+                }
+              }
+          ]
         }
-    }
+    ]
 }

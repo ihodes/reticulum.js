@@ -1,0 +1,61 @@
+{
+    "name": "driver",
+    "initialState": "OffCall",
+    "states": [
+        { "name" : "OffCall",
+          "actions" : {
+              "event" : [ [["if", "eq", "goOnCall"], "OnCall"] ]
+          }
+        },
+        { "name" : "OnCall",
+          "initialState" : "Idle",
+          "actions" : {
+              "event" : [ [["if" "eq" "updateLocation"]
+                           ["set" ".location" "..location"]] ]
+          },
+          "states" : [
+              { "name" : "Idle",
+                "actions": {
+                    "event": [ [["if", "eq", "accept"],
+                                ["send", "Ride", "..ride.id", "accept", "driverId::.id"],
+                                ["set", ".currentRide", "..ride"],
+                                "EnRoute"],
+                               [["if", "eq", "goOffDuty"], "OffDuty"] ],
+                    "enter": [ [["clear", ".currentRide"]] ]
+                }
+              },
+              { "name" : "EnRoute",
+                "actions": {
+                    "event": [ [["if", "eq", "pickUp"],
+                                ["send", "Ride", ".currentRide.id", "pickedUp"],
+                                "Driving"],
+                               [["if", "eq", "decline"], // driver cancels ride
+                                ["send", "Ride", ".currentRide.id", "decline"],
+                                "Idle"],
+                               [["if", "eq", "cancel"], // rider cancels ride
+                                "Idle"] ],
+                    "enter": [ [["sync", "Ride", ".currentRide.id", "driverLocation::.location"]] ] // update ride's driverLocation as it changes locally
+                }
+              },
+              { "name" : "Driving",
+                "actions": {
+                    "event" : [ [["if", "eq", "dropoff"],
+                                 ["send", "Ride", ".currentRide.id", "droppedOff"],
+                                 "Delivered"], ],
+                    "exit"  : [ [["unsync", "Ride"]] ] // stop syncing all attributes with Rides
+                }
+              },
+              { "name" : "Delivered",
+                "actions": {
+                    "event": [ [["if", "eq", "sendFeedback"],
+                                ["request", "post", ["@UberWebhookUrl", "/feedback"],
+                                 "feedback::..feedback",
+                                 "rideId::.currentRide.id",
+                                 "driverId::.id"],
+                                "Idle"], ]
+                }
+              }
+          ]
+        }
+    ]
+}

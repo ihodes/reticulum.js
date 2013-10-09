@@ -1,58 +1,56 @@
 {
-    "name": "customer",
-    "description": "describes a customer's actions",
-    "group": "techcare",
-    "user": "techcare",
-    "initialState": "idle",
-
-    "fsm": {
-        "idle": {
-            "actions": {
-                "event": [
-                    ["ifEqTransitionTo", "requestVisit", "waitingForResponse"]
-                ]
+    "name": "patient",
+    "initialState": "Idle",
+    "states": [
+        { "name" : "Idle",
+          "actions": {
+              "event": [ [["if", "eq", "requestVisit"],
+                          ["reify", "Visit", ".currentVisit",
+                           "location::..location",
+                           "patientId::.id"],
+                          "WaitingForResponse"]
+                       ]
+          }
+        },
+        { "name" : "WaitingForResponse",
+          "actions": {
+              "event": [ 
+                  [["if", "eq", "visitAccepted"],
+                   "WaitingForArrival"],
+                  [["if", "eq", "cancel"],
+                   ["send", "Visit", ".currentVisit.id", "cancel"],
+                   ["clear" ".currentVisit"]
+                   "Idle"]
+              ],
             }
         },
-        "waitingForResponse": {
-            "actions": {
-                "event": [
-                    ["ifEqTransitionTo", "doctorReporting", "waitingForArrival"]
-                ],
-                "enter": [
-                    ["messageBus", "visits",
-                     "patientId::.id", "location::.locations.selected"]
-                ]
-            }
+        { "name" : "WaitingForArrival",
+          "actions": {
+              "event": [ [["if", "eq", "arrived"] "BeingTreated"],
+                         [["if", "eq", "doctorCancelled"] "WaitingForResponse"],
+                         [["if", "eq", "cancel"],
+                          ["send", "Visit", ".currentVisit.id", "cancel"],
+                          ["clear", ".currentVisit"],
+                          "Idle"]
+                       ]
+          }
         },
-        "waitingForArrival": {
-            "actions": {
-                "event": [
-                    ["listen", "doctorLocation", ".doctorLocation"]
-                    ["ifEqTransitionTo", "doctorArrived", "beingTreated"]
-                ],
-                "exit": [
-                    ["stoplisten", "doctorLoction"]
-                ]
-            }
+        { "name" : "BeingTreated",
+          "actions": {
+              "event": [ [["if", "eq", "treated"] "Treated"] ]
+          }
         },
-        "beingTreated": {
-            "actions": {
-                "event": [
-                    ["ifEqTransitionTo", "treatmentDone", "treated"]
-                ]
-            }
-        },
-        "treated": {
-            "actions": {
-                "event": [
-                    ["ifEqTransitionTo", "feedbackSent", "idle"]
-                ],
-                "exit":  [
-                    ["messageBus", "patientFeedback",
-                     "patientId::.id", "doctorId::.visit.doctorId"],
-                    ["clear", ".visit"]
-                ]
-            }
+        { "name" : "Treated",
+          "actions": {
+              "event": [ [["if", "eq", "sentFeedback"],
+                          ["request", "post", ["@TechCareWebhookUrl", "/feedback"],
+                           "feedback::..feedback",
+                           "visitId::.currentVisit.id",
+                           "customerId::.id"],
+                          "Idle"] 
+                       ],
+              "exit": [ ["clear" ".currentVisit"] ]
+          }
         }
-    }
+    ]
 }
