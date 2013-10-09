@@ -2,6 +2,8 @@ See `docs.md` for documentation. More to come.
 
 To set up, `cp .envTemplate .env`, make sure you have foreman installed via the heroku toolbelt, `npm install` deps, and run with `make`. Test with `make test`. Need vows in order to run tests (`npm install vows -g`).
 
+reticulum implements the [FSM spec](https://gist.github.com/ihodes/f009cc66422232f411b6).
+
 ##### Todo: 
 
 1. MAYBE: Handing all enter/exit actions when transitions through multiple states (what's the proper UML SM way to do this?)

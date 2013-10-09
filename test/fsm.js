@@ -6,88 +6,114 @@ var vows     = require('vows'),
 var reticulum = require('../lib/reticulum');
 
 var testfsm = {
-    stateA: { 
-        actions: {
-            event: [
-                ["ifEqTransitionTo", "gotoB", "stateB"],
-                ["transitionTo", "stateA1"]
-            ]
-        },
-
-        substates: {
-
-            stateA1: {
-                actions: {
-                    enter: [
-                        ["log"],
-                        ["incGlobal", "magic"]
-                    ]
-                }
-            }
-
-        }
+    name: 'StateA',
+    initialState: 'SubstateA1',
+    actions: {
+        event: [ [['log', 'StateA recieved this message']] ]
     },
-
-    stateB: {
-        actions: {
-            event: [
-                ["transitionTo", "stateA"]
-            ]
-        }
-    }
+    states: [
+        { name: 'SubstateA1',
+          actions: {
+              event: [ [['log', 'SubstateA1 got a message']],
+                       [['if', 'eq', 'gotoA2'], 'SubstateA2'],
+                       [['if', 'eq', 'gotoSubA3'], 'SubsubstateA31'] ]
+          },
+        },
+        { name: 'SubstateA2',
+          actions: {
+              event: [ [['if', 'eq', 'gotoA1'], 'SubstateA2'] ],
+              enter: [ [['log', 'just entered SubstateA2']] ]
+          },
+        },
+        { name: 'SubstateA3',
+          actions: {
+              event: [ [['log', 'SubstateA3 recieved this message']] ],
+              enter: [ [['log', 'just entered SubstateA3']] ],
+              exit:  [ [['log', 'just exited SubstateA3']] ]
+          },
+          initialState: 'SubsubstateA32',
+          states: [
+              { name: 'SubsubstateA31',
+                actions: {
+                    event: [ [['log', 'SubsubstateA31 recieved this message']],
+                             [['if', 'eq', 'gotoA2'], 'SubstateA2'] ],
+                    enter: [ [['set', 'magicVar', 'testSet']],
+                             [['log', 'just entered SubsubstateA31']] ],
+                    exit:  [ [['log', 'just exited SubsubstateA31']] ]
+                }
+              },
+              { name: 'SubsubstateA32' }
+          ]
+        },
+        { name: 'SubstateA4' }
+    ]
 };
 
 
 
+
 vows.describe('Operating with a FSM').addBatch({
-    'when reifying a fsm': {
+    'when reifying a FSM': {
         topic: function() {
-            return reticulum.reify(testfsm, 'stateA');
+            return reticulum.reify(testfsm);
         },
 
-        'a fsmM should be returned': function(topic) {
+        'a FSM instance should be returned': function(topic) {
             should.exist(topic);
-            topic.should.be.an.instanceOf(Array);
-            topic.should.includeEql(testfsm); // fsm
-            topic.should.includeEql({ stateName: 'stateA', globals: {},
-                                      lastEvent: [undefined, []] }); // currentState
-            topic.should.includeEql([]); // history
+
+            topic.should.be.an.instanceOf(Object, undefined, 2);
+            topic.should.have.keys('fsm', 'currentStateName', 'locals', 'lastEvent');
+            topic.currentStateName.should.be.a.String;
+            topic.locals.should.be.an.instanceOf(Object);
+            topic.lastEvent.should.be.an.instanceOf(Object);
+
+            topic.currentStateName.should.equal('SubstateA1');
+         }
+     },
+
+     'when sending an event that should transition': {
+         topic: function() {
+             var fsmi =  reticulum.reify(testfsm);
+             fsmi = reticulum.send(fsmi, 'gotoA2');
+             return fsmi;
+         },
+
+         'a new FSM instance should be returned with the new state': function(topic) {
+            should.exist(topic);
+
+            topic.should.be.an.instanceOf(Object, undefined, 2);
+            topic.should.have.keys('fsm', 'currentStateName', 'locals', 'lastEvent');
+            topic.currentStateName.should.be.a.String;
+            topic.locals.should.be.an.instanceOf(Object);
+            topic.lastEvent.should.be.an.instanceOf(Object);
+
+            // testing transition
+            topic.currentStateName.should.equal('SubstateA2');
         }
     },
 
-    'when sending an event that should transition': {
+    'when sending an event that has an enter event, and transitions': {
         topic: function() {
-            var fsmM1 =  reticulum.reify(testfsm, 'stateA');
-            fsmM2 = reticulum.send(fsmM1, 'gotoB');
-            return fsmM2;
+            var fsmi =  reticulum.reify(testfsm);
+            fsmi = reticulum.send(fsmi, 'gotoSubA3');
+            return fsmi;
         },
 
-        'a new fsmM should be returned with the new state': function(topic) {
+        'a FSM instance should be returned with the new state and updated global': function(topic) {
             should.exist(topic);
-            topic.should.be.an.instanceOf(Array);
-            topic.should.includeEql(testfsm); // fsm
-            topic.should.includeEql({ stateName: 'stateB', globals: {},
-                                      lastEvent: ['gotoB', []] }); // currentState
-            topic.should.includeEql([{ stateName: 'stateA', globals: {},
-                                       lastEvent: [undefined, []] }]); // history
-        }
-    },
 
-    'when sending an event that has exit event, and transitions': {
-        topic: function() {
-            var fsmM1 =  reticulum.reify(testfsm, 'stateA');
-            fsmM2 = reticulum.send(fsmM1, 'a1go');
-            return fsmM2;
-        },
+            topic.should.be.an.instanceOf(Object, undefined, 2);
+            topic.should.have.keys('fsm', 'currentStateName', 'locals', 'lastEvent');
+            topic.currentStateName.should.be.a.String;
+            topic.locals.should.be.an.instanceOf(Object);
+            topic.lastEvent.should.be.an.instanceOf(Object);
 
-        'a new fsmM should be returned with the new state and updated global': function(topic) {
-            topic.should.be.an.instanceOf(Array);
-            topic.should.includeEql(testfsm); // fsm
-            topic.should.includeEql({ stateName: 'stateA1', globals: {magic: 0},
-                                      lastEvent: ['a1go', []] }); // currentState
-            topic.should.includeEql([{ stateName: 'stateA', globals: {},
-                                       lastEvent: [undefined, []] }]); // history
-            should.exist(topic);
+            // testing nested transition
+            topic.currentStateName.should.equal('SubsubstateA31');
+
+            // testing locals (setting)
+            topic.locals.should.have.keys('magicVar');
+            topic.locals.magicVar.should.eql('testSet');
         }
     }
 }).export(module);
