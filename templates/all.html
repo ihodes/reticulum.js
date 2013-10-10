@@ -10,7 +10,7 @@
     <h2>All Machines</h2>
     <ul>
     <% for(var i=0; i<fsms.length; i++) { %>
-       <li><a href="<%= fsms[i].id %>/show"><%= fsms[i].group %>::<%= fsms[i].name %></a></li>
+       <li><a href="<%= fsms[i].id %>/show"><%= fsms[i].group %>::<%= fsms[i].name %></a> <small>(<%= fsms[i].description %>)</small></li>
     <% } %>
     </ul>
   </body>

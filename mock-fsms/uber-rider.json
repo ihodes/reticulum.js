@@ -20,15 +20,15 @@
                    "WaitingForPickup"],
                   [["if", "eq", "cancel"],
                    ["send", "Ride", ".currentRide.id", "cancel"],
-                   ["clear" ".currentRide"]
+                   ["clear", ".currentRide"],
                    "Idle"]
-              ],
+              ]
             }
         },
         { "name" : "WaitingForPickup",
           "actions": {
-              "event": [ [["if", "eq", "pickedUp"] "InCar"],
-                         [["if", "eq", "driverCancelled"] "WaitingForResponse"],
+              "event": [ [["if", "eq", "pickedUp"], "InCar"],
+                         [["if", "eq", "driverCancelled"], "WaitingForResponse"],
                          [["if", "eq", "cancel"],
                           ["send", "Ride", ".currentRide.id", "cancel"],
                           ["clear", ".currentRide"],
@@ -38,7 +38,7 @@
         },
         { "name" : "InCar",
           "actions": {
-              "event": [ [["if", "eq", "droppedOff"] "Arrived"] ]
+              "event": [ [["if", "eq", "droppedOff"], "Arrived"] ]
           }
         },
         { "name" : "Arrived", 
@@ -50,7 +50,7 @@
                            "customerId::.id"],
                           "Idle"] 
                        ],
-              "exit": [ ["clear" ".currentRide"] ]
+              "exit": [ ["clear", ".currentRide"] ]
           }
         }
     ]

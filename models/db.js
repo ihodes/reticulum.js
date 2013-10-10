@@ -12,12 +12,11 @@ var ObjectId = mongoose.Schema.ObjectId;
 
 var fsmSchema = new mongoose.Schema({
     createdAt:    {type: Date, default: Date.now},
-    fsm:          {type: Object},
-    initialState: {type: String},
-    name:         {type: String},
+    fsm:          {type: Object, required: true},
+    name:         {type: String, required: true},
     description:  {type: String},
-    user:         {type: String},
-    group:        {type: String} // logical group for interstate communication
+    user:         {type: String}, // organizational user
+    group:        {type: String}  // logical application group for interstate communication
 }, { minimize: false });
 fsmSchema.post('save', function(doc) {
     logger.info('Saved fsm: ' + JSON.stringify(doc.toObject()));
@@ -25,17 +24,18 @@ fsmSchema.post('save', function(doc) {
 exports.fsm = mongoose.model('fsm', fsmSchema);
 
 
-var fsmMSchema = new mongoose.Schema({
+var fsmInstanceSchema = new mongoose.Schema({
     createdAt:    {type: Date, default: Date.now},
 
     fsm: {type: ObjectId, ref: 'fsm', required: true},
-    currentState: {type: Object, required: true},
-    history: []
+    locals: {type: Object, required: true, default: {}},
+    currentStateName: {type: String, required: true},
+    lastEvent: {type: {name: String, args: Object}, required: true, default: {name: null, args: {}}}
 }, { minimize: false });
-fsmMSchema.post('save', function(doc) {
-    logger.info('Saved fsmM: ' + JSON.stringify(doc.toObject()));
+fsmInstanceSchema.post('save', function(doc) {
+    logger.info('Saved fsm instance: ' + JSON.stringify(doc.toObject()));
 });
-exports.fsmM = mongoose.model('fsmM', fsmMSchema);
+exports.fsmInstance = mongoose.model('fsmInstance', fsmInstanceSchema);
 
 
 

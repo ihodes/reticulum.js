@@ -9,14 +9,15 @@ var _      = require('underscore'),
     logger = require('../lib/logger').logger;
 require('underscore-contrib');
 
-var API = {
-    publicFields: {_id: U._idToId, fsm: null, name: null, group: null,
-                   initialState: null, description: null},
 
-    // TK TODO need to do actual FSM validation.
+var API = {
+    publicFields: {_id: U._idToId, fsm: null,
+                   name: null, group: null,
+                   description: null},
+
+    // TK TODO need to do actual FSM validation. (see lib/fsmValidator for stubbed work iah@10/9/13)
     createParams: {fsm: [true, _.always(true)], name: true,
-                   description: false, user: false, group: false,
-                   initialState: false}
+                   description: false, user: false, group: false}
 };
 var cleaner = loch.allower(API.publicFields);
 var createValidator = _.partial(loch.validates, API.createParams);
@@ -58,5 +59,5 @@ exports.listFsms = function(req, res) {
 };
 
 exports.showFsm = function(req, res) {
-    res.render('show.html', {id: req.params.fsmId, fsmMId: ''});
+    res.render('show.html', {id: req.params.fsmId, fsmInstanceId: ''});
 };

@@ -38,10 +38,10 @@
         d3.select('pre').text("404 NOT FOUND");
         return console.warn(error);
       } else {
-        if(!_.isEmpty("<%= fsmMId %>")) {
-          d3.json("/v1/fsm/<%= id %>/<%= fsmMId %>", function(error, fsmMJson) {
-            prepareDisplay(fsmJson, fsmMJson.currentState.stateName,
-                                    fsmMJson.currentState.globals);
+        if(!_.isEmpty("<%= fsmInstanceId %>")) {
+          d3.json("/v1/fsm/<%= id %>/<%= fsmInstanceId %>", function(error, fsmInstanceJson) {
+            prepareDisplay(fsmJson, fsmInstanceJson.currentState.stateName,
+                                    fsmInstanceJson.currentState.globals);
           });
         } else {
             prepareDisplay(fsmJson);

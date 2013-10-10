@@ -9,8 +9,8 @@ require('express-namespace');
 require('underscore-contrib');
 var logger = logging.logger;
 
-var fsm  = require('./controllers/fsm'),
-    fsmM = require('./controllers/fsmM');
+var fsm         = require('./controllers/fsm'),
+    fsmInstance = require('./controllers/fsmInstance');
 
 
 // App init
@@ -36,20 +36,20 @@ app.namespace('/v1', function() {
 
         // html for displaying the FSMs
         app.get('/all', fsm.listFsms);
-        app.get('/:fsmId/show', fsm.showFsm);
+        app.get('/:fsmId/show', fsm.showFsm); // won't work properly with the new fsm spec
 
         // specific fsms
         app.put('/:fsmId', fsm.updateFsm);
         app.get('/:fsmId', fsm.getFsm);
 
         app.namespace('/:fsmId', function() {
-            app.get('/all', fsmM.allFsmMs);
-            app.post('/reify', fsmM.reifyFsm);
-            app.get('/:fsmMId', fsmM.getFsmM);
-            app.post('/:fsmMId/send/:event', fsmM.sendEvent);
+            app.get('/all', fsmInstance.allFsmInstances);
+            app.post('/reify', fsmInstance.reifyFsm);
+            app.get('/:fsmInstanceId', fsmInstance.getFsmInstance);
+            app.post('/:fsmInstanceId/send/:event', fsmInstance.sendEvent);
 
-            // html for displaying the fsmM (similar to showFsm)
-            app.get('/:fsmMId/show', fsmM.showFsmM);
+            // html for displaying the fsmInstance (similar to showFsm)
+            app.get('/:fsmInstanceId/show', fsmInstance.showFsmInstance); // won't work properly with the new fsm spec
         });
     })
 });
@@ -63,36 +63,3 @@ app.listen(config.settings.PORT, function () {
     logger.info("Listening on port " + config.settings.PORT);
 });
 
-
-var testfsm = {
-    stateA: {
-        actions: {
-            event: [
-                ["ifEqTransitionTo", "toB", "stateB"],
-                ["transitionTo", "stateA1"]
-            ]
-        },
-
-        substates: {
-
-            stateA1: {
-                actions: {
-                    enter: [
-                        ["log"],
-                        ["incGlobal", "magic"]
-                    ]
-                }
-            }
-
-        }
-    },
-
-    stateB: {
-        actions: {
-            event: [
-                ["log"],
-                ["transitionTo", "stateA"]
-            ]
-        }
-    }
-};
