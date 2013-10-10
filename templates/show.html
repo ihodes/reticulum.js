@@ -30,7 +30,7 @@
         .text(JSON.stringify(fsmJson, ['name','initialState','group'], 2)
               +" // "+
               JSON.stringify(globals || {}, undefined, 2));
-      displayFsm(fsmJson.fsm, fsmJson.initialState, currentState);
+      displayFsm(fsmJson.fsm);
     }
 
     d3.json("/v1/fsm/<%= id %>", function(error, fsmJson) {
@@ -38,6 +38,7 @@
         d3.select('pre').text("404 NOT FOUND");
         return console.warn(error);
       } else {
+        window.fsm = fsmJson;
         if(!_.isEmpty("<%= fsmInstanceId %>")) {
           d3.json("/v1/fsm/<%= id %>/<%= fsmInstanceId %>", function(error, fsmInstanceJson) {
             prepareDisplay(fsmJson, fsmInstanceJson.currentState.stateName,
@@ -55,9 +56,6 @@
     <div id="diag" class="boxd">
       <img src="/imgs/loader.gif" alt="loader" class="loading" style="padding: 20px;">
     </div>
-    <p>
-      The initial state is indicated by a <b style="color:#333;">dark grey</b> node. A <b style="color:gold;">gold</b> node indicates the current state. <b style="color:green;">Green</b> transitions represent GeoEvents, and <b style="#666; border-bottom: 1px dotted #666;">grey dotted</b> transitions occur given a specific event name recieved.
-    </p>
     <h4>Info</h4>
     <pre id="info" class="boxd"><img src="/imgs/loader.gif" alt="loader" class="loading"></pre>
     <br>

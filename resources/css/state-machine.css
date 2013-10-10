@@ -1,50 +1,21 @@
-path.link {
-    fill: none;
-    stroke: #666;
-    stroke-width: 1.5px;
-}
-
-marker#transitionTo {
-    fill: blue;
-}
-
-marker#ifGeoEvent {
-    fill: green;
-}
-
-path.link.transitionTo {
-    stroke: blue;
-}
-
-path.link.ifEqTransitionTo {
-    stroke-dasharray: 0,2 1;
-}
-
-path.link.ifGeoEvent {
-    stroke: green;
-}
-
 circle {
-    fill: #ccc;
-    stroke: #333;
-    stroke-width: 1.5px;
+  fill: #a1a1a1;
+  fill-opacity: .25;
+  stroke: #ccc;
+  stroke-width: 1px;
 }
 
-circle.initial {
-    fill: #333;
-}
-
-circle.current {
-    fill: gold;
+.leaf circle {
+  fill: #909090;
+  fill-opacity: 1;
 }
 
 text {
-    font: 10px sans-serif;
-    pointer-events: none;
+  font: 10px sans-serif;
 }
 
-text.shadow {
-    stroke: #fff;
-    stroke-width: 3px;
-    stroke-opacity: .8;
+.transition {
+  fill: none;
+  stroke: #545454;
+  stroke-width: 1.5px;
 }

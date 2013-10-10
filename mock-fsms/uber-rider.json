@@ -1,5 +1,5 @@
 {
-    "name": "customer",
+    "name": "Customer",
     "initialState": "Idle",
     "states": [
         { "name" : "Idle",

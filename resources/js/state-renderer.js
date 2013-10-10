@@ -1,114 +1,151 @@
-var displayFsm = function (fsm, initialState, currentState) {
-    // TK UNHACX should factor this out somewhere more central
-    var transitions = ['ifEqTransitionTo', 'transitionTo', 'ifGeoEvent'];
+var displayFsm = function (fsm) {
+    // TK TODO dynamic diameter
+    var diameter = 550,
+        format = d3.format(",d");
 
-    var radius = 25,
-        spc    = 30,
-        height = 300,
-        width  = 800;
-
-    var svg = d3.select("#diag").append("svg:svg")
-        .attr("height", height).attr("width", "100%")
-        .style("display", "none");
-
-    var links = _.map(fsm, function(val, key) { 
-        var links = [];
-        if (val.actions && val.actions.event) {
-            _.each(val.actions.event, function(evt) {
-                console.log(_.first(evt))
-                if(_.contains(transitions, _.first(evt)))
-                    links.push({source: key, target: _.last(evt), type: _.first(evt)});
-            });
-        }
-        return links;
-    });
-    links = _.flatten(links);
-    window.links = links;
-
-    var nodes = {};
-    links.forEach(function(link) {
-        link.source = nodes[link.source] || (nodes[link.source] = {name: link.source});
-        link.target = nodes[link.target] || (nodes[link.target] = {name: link.target});
-    });
-    window.nodes = nodes;
-
-    var force = d3.layout.force()
-      .nodes(d3.values(nodes))
-      .links(links)
-      .size([width, height])
-      .linkDistance(100)
-      .charge(-300)
-      .on("tick", tick)
-      .start();
+    var svg = d3.select("#diag").append("svg")
+        .attr("width", diameter)
+        .attr("height", diameter)
+      .append("g")
+        .attr("transform", "translate(0,0)");
     
-    // Per-type markers, as they don't inherit styles.
-    svg.append("svg:defs").selectAll("marker")
-        .data(transitions)
-      .enter().append("svg:marker")
-        .attr("id", String)
-        .attr("viewBox", "0 -5 10 10")
-        .attr("refX", 22)
-        .attr("refY", -1.5)
-        .attr("markerWidth", 6)
-        .attr("markerHeight", 6)
-        .attr("orient", "auto")
-      .append("svg:path")
-        .attr("d", "M0,-5L10,0L0,5");
-    
-    var path = svg.append("svg:g").selectAll("path")
-        .data(force.links())
-        .enter().append("svg:path")
-        .attr("class", function(d) { return "link " + d.type; })
-        .attr("marker-end", function(d) { return "url(#" + d.type + ")"; });
-    
-    var circle = svg.append("svg:g").selectAll("circle")
-        .data(force.nodes()).enter()
-      .append("svg:circle")
-        .attr("class", function (d) {
-            if (d.name === currentState)
-                return "current";
-            else if (d.name === initialState)
-                return "initial";
-            else return "";
+    svg.append('svg:defs').append('svg:marker')
+        .attr('id', 'end-arrow')
+        .attr('viewBox', '0 -5 10 10')
+        .attr('refX', 6)
+        .attr('markerWidth', 6)
+        .attr('markerHeight', 6)
+        .attr('orient', 'auto')
+      .append('svg:path')
+        .attr('d', 'M0,-5L10,0L0,5')
+        .attr('fill', '#545454');
+
+    var pack = d3.layout.pack()
+        .children(function (d) { return d.states; })
+        .value(function(d){ return 1/(d.depth+1); })
+        .size([diameter - 4, diameter - 4])
+        .padding(20);
+
+    var diagonal = d3.svg.diagonal.radial()
+        .source(function(d) {
+            var target = {x: Math.floor(d.target.x), y: Math.floor(d.target.y)};
+            var z = {x: Math.floor(d.source.x), y: Math.floor(d.source.y)};
+            var r = d.source.r;
+            var r45 = Math.sin(Math.PI/4)*r;
+
+            if (z.x > target.x && z.y > target.y) {
+                z.x -= r45;
+                z.y -= r45;
+            } else if (z.x < target.x && z.y > target.y) {
+                z.x += r45;
+                z.y -= r45;
+            } else if (z.x < target.x && z.y < target.y) {
+                z.x += r45;
+                z.y += r45;
+            } else if (z.x > target.x && z.y < target.y) {
+                z.x -= r45;
+                z.y += r45;
+            } 
+
+            if (z.y == target.y && z.x < target.x ) z.x += r;
+            else if (z.y == target.y && z.x > target.x ) z.x -= r;
+
+            if (z.x == target.x && z.y < target.y ) z.y += r;
+            else if (z.x == target.x && z.y > target.y ) z.y -= r;
+
+            return z;
         })
-        .attr("r", 12)
-        .call(force.drag);
-    
-    var text = svg.append("svg:g").selectAll("g")
-        .data(force.nodes())
-        .enter().append("svg:g");
-    
-    // A copy of the text with a thick white stroke for legibility.
-    text.append("svg:text")
-        .attr("x", 8)
-        .attr("y", ".31em")
-        .attr("class", "shadow")
-        .text(function(d) { return d.name; });
-    
-    text.append("svg:text")
-        .attr("x", 8)
-        .attr("y", ".31em")
-        .text(function(d) { return d.name; });
+        .target(function(d) {
+            var source = {x: Math.floor(d.source.x), y: Math.floor(d.source.y)};
+            var z = {x: Math.floor(d.target.x), y: Math.floor(d.target.y)};
+            var r = d.target.r;
+            var r45 = Math.sin(Math.PI/4)*r;
 
-    // Use elliptical arc path segments to doubly-encode directionality.
-    function tick() {
-        path.attr("d", function(d) {
-            var dx = d.target.x - d.source.x,
-            dy = d.target.y - d.source.y,
-            dr = Math.sqrt(dx * dx + dy * dy);
-            return "M" + d.source.x + "," + d.source.y + "A" + dr + "," + dr + " 0 0,1 " + d.target.x + "," + d.target.y;
+            if (z.x > source.x && z.y > source.y) {
+                z.x -= r45;
+                z.y -= r45;
+            } else if (z.x < source.x && z.y > source.y) {
+                z.x += r45;
+                z.y -= r45;
+            } else if (z.x < source.x && z.y < source.y) {
+                z.x += r45;
+                z.y += r45;
+            } else if (z.x > source.x && z.y < source.y) {
+                z.x -= r45;
+                z.y += r45;
+            }
+
+            if (z.y == source.y && z.x < source.x ) z.x += r;
+            else if (z.y == source.y && z.x > source.x ) z.x -= r;
+
+            if (z.x == source.x && z.y < source.y ) z.y += r;
+            else if (z.x == source.x && z.y > source.y ) z.y -= r;
+
+            return z;
         });
         
-        circle.attr("transform", function(d) {
-            return "translate(" + d.x + "," + d.y + ")";
-        });
-        
-        text.attr("transform", function(d) {
-            return "translate(" + d.x + "," + d.y + ")";
-        });
-    }
+    var findStateIn = function(root, name) {
+        return (function __letrec(currentNode) {
+            if (currentNode.name == name) return currentNode;
+            else return _.first(_.compact(_.map(currentNode.states, __letrec)));
+        })(root);
+    };
+
     
-    // remove the loading gif once we get here...
+    // this should be wrapped in a closure and made ref. trans. 
+    var links = [];
+    // Sets the target attribute on each node that could possibley transition to another node.
+    // ... this is what we'll use to set any special attributes for display using D3. 
+    // recurseively visits states (and their children)
+    (function __letrec(node, root) {
+        if (node.actions && node.actions.event) {
+            var targetNames = _.compact(_.map(node.actions.event, function(action) {
+                if (_.isString(_.last(action)))
+                    return _.last(action);
+            }));
+            var targets = _.map(targetNames, _.partial(findStateIn, root));
+            _.each(targets, function(t) {
+                links.push({source: node, target: t})
+            })
+            node.targets = targets;
+        }
+        _.each(node.states, function(node) { __letrec(node, root)});
+    })(fsm, fsm);
+
+
+    // TK TODO order nodes so that nodes with edges between them are close to one another; that way it isn't a messy graph
+    var node = svg.selectAll(".node")
+        .data(pack.nodes(fsm))
+      .enter().append("g")
+        .attr("class", function(d) { return d.children ? "node" : "leaf node"; })
+        .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+
+    node.append("circle")
+        .attr("r", function(d) { return d.r; });
+
+    node.append("title")
+        .text(function(d) { return JSON.stringify(d.actions); });
+
+    node.filter(function(d) { return !d.children; }).append("text")
+        .attr("dy", ".3em")
+        .style("text-anchor", "middle")
+        .text(function(d) { return d.name.substring(0, d.r / 3); });
+
+    node.filter(function(d) { return d.children; }).append("text")
+        .attr("dy", ".3em")
+        .style("text-anchor", "middle")
+        .style("font-size", "14px") // TK TODO should probably vary this depending on depth
+        .style("font-weight", "700")
+        .text(function(d) { return d.name; })
+        .attr("transform", function(d) { return "translate(0," + (20-d.y) + ")"; });
+
+    svg.selectAll(".transition")
+        .data(links).enter()
+      .append("path")
+        .attr("class", "transition")
+        .attr("d", diagonal)
+        .style("marker-end", 'url(#end-arrow)');
+
     d3.select(".loading").style("display", "none");
     d3.select("svg").style("display", "block");
 };
