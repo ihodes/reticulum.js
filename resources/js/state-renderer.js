@@ -28,6 +28,7 @@ var displayFsm = function (fsm) {
 
     var diagonal = d3.svg.diagonal.radial()
         .source(function(d) {
+            console.log(d);
             var target = {x: Math.floor(d.target.x), y: Math.floor(d.target.y)};
             var z = {x: Math.floor(d.source.x), y: Math.floor(d.source.y)};
             var r = d.source.r;
@@ -47,8 +48,8 @@ var displayFsm = function (fsm) {
                 z.y += r45;
             } 
 
-            if (z.y == target.y && z.x < target.x ) z.x += r;
-            else if (z.y == target.y && z.x > target.x ) z.x -= r;
+            if (z.y == target.y && z.x < target.x ) { z.x += r-4; z.y -= 5;}
+            else if (z.y == target.y && z.x > target.x ) { z.x -= r-4; z.y += 5;}
 
             if (z.x == target.x && z.y < target.y ) z.y += r;
             else if (z.x == target.x && z.y > target.y ) z.y -= r;
@@ -75,8 +76,8 @@ var displayFsm = function (fsm) {
                 z.y += r45;
             }
 
-            if (z.y == source.y && z.x < source.x ) z.x += r;
-            else if (z.y == source.y && z.x > source.x ) z.x -= r;
+            if (z.y == source.y && z.x < source.x ) z.x += r+3;
+            else if (z.y == source.y && z.x > source.x ) z.x -= r+3;
 
             if (z.x == source.x && z.y < source.y ) z.y += r;
             else if (z.x == source.x && z.y > source.y ) z.y -= r;
@@ -103,7 +104,7 @@ var displayFsm = function (fsm) {
                 if (_.isString(_.last(action)))
                     return _.last(action);
             }));
-            var targets = _.map(targetNames, _.partial(findStateIn, root));
+            var targets = _.compact(_.map(targetNames, _.partial(findStateIn, root)));
             _.each(targets, function(t) {
                 links.push({source: node, target: t})
             })
@@ -113,11 +114,17 @@ var displayFsm = function (fsm) {
     })(fsm, fsm);
 
 
-    // TK TODO order nodes so that nodes with edges between them are close to one another; that way it isn't a messy graph
     var node = svg.selectAll(".node")
         .data(pack.nodes(fsm))
       .enter().append("g")
-        .attr("class", function(d) { return d.children ? "node" : "leaf node"; })
+        .attr("class", function(d) { 
+            if (d.children)
+                return "node";
+            else if (d.parent.initialState == d.name)
+                return "initial";
+            else
+                return "leaf";
+        })
         .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
 
     node.append("circle")
@@ -137,7 +144,7 @@ var displayFsm = function (fsm) {
         .style("font-size", "14px") // TK TODO should probably vary this depending on depth
         .style("font-weight", "700")
         .text(function(d) { return d.name; })
-        .attr("transform", function(d) { return "translate(0," + (20-d.y) + ")"; });
+        .attr("transform", function(d) { return "translate(0," + (20-d.r) + ")"; });
 
     svg.selectAll(".transition")
         .data(links).enter()

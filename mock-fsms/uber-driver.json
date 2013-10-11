@@ -1,5 +1,5 @@
 {
-    "name": "driver",
+    "name": "Driver",
     "initialState": "OffCall",
     "states": [
         { "name" : "OffCall",
@@ -10,8 +10,8 @@
         { "name" : "OnCall",
           "initialState" : "Idle",
           "actions" : {
-              "event" : [ [["if" "eq" "updateLocation"]
-                           ["set" ".location" "..location"]] ]
+              "event" : [ [["if", "eq", "updateLocation"],
+                           ["set", ".location", "..location"]] ]
           },
           "states" : [
               { "name" : "Idle",
@@ -29,20 +29,20 @@
                     "event": [ [["if", "eq", "pickUp"],
                                 ["send", "Ride", ".currentRide.id", "pickedUp"],
                                 "Driving"],
-                               [["if", "eq", "decline"], // driver cancels ride
+                               [["if", "eq", "decline"],
                                 ["send", "Ride", ".currentRide.id", "decline"],
                                 "Idle"],
-                               [["if", "eq", "cancel"], // rider cancels ride
+                               [["if", "eq", "cancel"],
                                 "Idle"] ],
-                    "enter": [ [["sync", "Ride", ".currentRide.id", "driverLocation::.location"]] ] // update ride's driverLocation as it changes locally
+                    "enter": [ [["sync", "Ride", ".currentRide.id", "driverLocation::.location"]] ]
                 }
               },
               { "name" : "Driving",
                 "actions": {
                     "event" : [ [["if", "eq", "dropoff"],
                                  ["send", "Ride", ".currentRide.id", "droppedOff"],
-                                 "Delivered"], ],
-                    "exit"  : [ [["unsync", "Ride"]] ] // stop syncing all attributes with Rides
+                                 "Delivered"] ],
+                    "exit"  : [ [["unsync", "Ride"]] ]
                 }
               },
               { "name" : "Delivered",
@@ -52,7 +52,7 @@
                                  "feedback::..feedback",
                                  "rideId::.currentRide.id",
                                  "driverId::.id"],
-                                "Idle"], ]
+                                "Idle"] ]
                 }
               }
           ]

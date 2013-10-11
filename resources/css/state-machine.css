@@ -6,8 +6,15 @@ circle {
 }
 
 .leaf circle {
+  fill: #a9a9a9;
+  fill-opacity: 1;
+}
+
+.initial circle {
   fill: #909090;
   fill-opacity: 1;
+  stroke: #222;
+  stroke-width: 1px;
 }
 
 text {
