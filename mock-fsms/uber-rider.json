@@ -1,6 +1,6 @@
 {
     "name": "Customer",
-    "initialState": "Idle",
+    "initialStateName": "Idle",
     "states": [
         { "name" : "Idle",
           "actions": {

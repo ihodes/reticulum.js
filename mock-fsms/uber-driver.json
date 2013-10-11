@@ -1,6 +1,6 @@
 {
     "name": "Driver",
-    "initialState": "OffDuty",
+    "initialStateName": "OffDuty",
     "states": [
         { "name" : "OffDuty",
           "actions" : {
@@ -8,7 +8,7 @@
           }
         },
         { "name" : "OnDuty",
-          "initialState" : "Idle",
+          "initialStateName" : "Idle",
           "actions" : {
               "event" : [ [["if", "eq", "updateLocation"],
                            ["set", ".location", "..location"]] ]

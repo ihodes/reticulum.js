@@ -16,7 +16,6 @@ reticulum implements the [FSM spec](https://gist.github.com/ihodes/f009cc6642223
 1. RPC for reififcation of FSMs from other FSM instances
 1. Allow requests to be made from FSMs (and results saved as JSON and stored in a key)
 1. More actions for funsies?
-1. GUI for displaying FSMs and FSM instances
 
 --- 
 lower prios

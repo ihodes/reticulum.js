@@ -12,8 +12,7 @@ require('underscore-contrib');
 
 var API = {
     publicFields: {_id: U._idToId, fsm: null,
-                   name: null, group: null,
-                   description: null},
+                   name: null, group: null, description: null},
 
     // TK TODO need to do actual FSM validation. (see lib/fsmValidator for stubbed work iah@10/9/13)
     createParams: {fsm: [true, _.always(true)], name: true,

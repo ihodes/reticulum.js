@@ -7,7 +7,7 @@ var reticulum = require('../lib/reticulum');
 
 var testfsm = {
     name: 'StateA',
-    initialState: 'SubstateA1',
+    initialStateName: 'SubstateA1',
     actions: {
         event: [ [['log', 'StateA recieved this message']] ]
     },
@@ -31,7 +31,7 @@ var testfsm = {
               enter: [ [['log', 'just entered SubstateA3']] ],
               exit:  [ [['log', 'just exited SubstateA3']] ]
           },
-          initialState: 'SubsubstateA32',
+          initialStateName: 'SubsubstateA32',
           states: [
               { name: 'SubsubstateA31',
                 actions: {

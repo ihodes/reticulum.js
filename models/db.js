@@ -26,7 +26,6 @@ exports.fsm = mongoose.model('fsm', fsmSchema);
 
 var fsmInstanceSchema = new mongoose.Schema({
     createdAt:    {type: Date, default: Date.now},
-
     fsm: {type: ObjectId, ref: 'fsm', required: true},
     locals: {type: Object, required: true, default: {}},
     currentStateName: {type: String, required: true},

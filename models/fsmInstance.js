@@ -16,7 +16,7 @@ exports.reifyFsm = function(fsmId, params, callback) {
     db.fsm.findOne({_id: fsmId}, function(err, fsm) {
         if (err || !fsm) return callback(err, null);
         var fsm        = fsm.fsm;
-        var initFields = {fsm: fsmId, currentStateName: fsm.initialState, locals: params};
+        var initFields = {fsm: fsmId, currentStateName: fsm.initialStateName, locals: params};
         db.fsmInstance(initFields).save(callback);
     });
 };

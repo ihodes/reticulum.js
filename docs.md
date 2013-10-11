@@ -45,7 +45,7 @@ A FSM looks like:
 ```json
 {
     "name": "driver",
-    "initialState": "OffCall",
+    "initialStateName": "OffCall",
     "states": [
         { "name" : "OffCall",
           "actions" : {
@@ -53,7 +53,7 @@ A FSM looks like:
           }
         },
         { "name" : "OnCall",
-          "initialState" : "Idle",
+          "initialStateName" : "Idle",
           "actions" : {
               "event" : [ [["if" "eq" "updateLocation"]
                            ["set" ".location" "..location"]] ]

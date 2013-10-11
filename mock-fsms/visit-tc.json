@@ -1,6 +1,6 @@
 {
     "name": "visit",
-    "initialState": "Created",
+    "initialStateName": "Created",
     "actions" : {
         "event" : [ [["if", "eq", "updateDoctorLocation"],
                      ["set", ".doctorLocation", "..location"]] ]

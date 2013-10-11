@@ -1,6 +1,6 @@
 {
     "name": "patient",
-    "initialState": "Idle",
+    "initialStateName": "Idle",
     "states": [
         { "name" : "Idle",
           "actions": {

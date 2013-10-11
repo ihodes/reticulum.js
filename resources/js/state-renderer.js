@@ -121,7 +121,7 @@ var displayFsm = function (fsm, currentState) {
                 return "current";
             else if (d.children)
                 return "node";
-            else if (d.parent.initialState == d.name)
+            else if (d.parent.initialStateName == d.name)
                 return "initial";
             else
                 return "leaf";

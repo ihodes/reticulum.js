@@ -29,7 +29,7 @@
       d3.select('h2')
         .text(capitalize(fsmJson.name));
       d3.select('#info')
-        .text(JSON.stringify(fsmJson, ['name','initialState','group'], 2)
+        .text(JSON.stringify(fsmJson, ['name','initialStateName','group'], 2)
               +" // "+
               JSON.stringify(globals || {}, undefined, 2)
               +" // "+
