@@ -32,9 +32,7 @@ exports.sendEvent = function(fsmInstanceId, fsmId, evt, params, callback) {
           if (err || !fsmInstance) return callback(err, null);
           var fsmi = {fsm: fsmInstance.fsm.fsm, currentStateName: fsmInstance.currentStateName,
                       lastEvent: fsmInstance.lastEvent, locals: fsmInstance.locals};
-          logger.debug(JSON.stringify(fsmi));
           var newInstance  = reticulum.send(fsmi, evt, params);
-          logger.debug(JSON.stringify(newInstance));
           var updateFields = _.pick(newInstance, 'currentStateName', 'lastEvent', 'locals');
           db.fsmInstance.findByIdAndUpdate(fsmInstance._id, updateFields, callback);
       });

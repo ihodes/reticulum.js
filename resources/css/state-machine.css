@@ -17,6 +17,11 @@ circle {
   stroke-width: 1px;
 }
 
+.current circle {
+  fill: gold;
+  fill-opacity: .5;
+}
+
 text {
   font: 10px sans-serif;
 }

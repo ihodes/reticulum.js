@@ -1,13 +1,13 @@
 {
     "name": "Driver",
-    "initialState": "OffCall",
+    "initialState": "OffDuty",
     "states": [
-        { "name" : "OffCall",
+        { "name" : "OffDuty",
           "actions" : {
-              "event" : [ [["if", "eq", "goOnCall"], "OnCall"] ]
+              "event" : [ [["if", "eq", "goOnDuty"], "OnDuty"] ]
           }
         },
-        { "name" : "OnCall",
+        { "name" : "OnDuty",
           "initialState" : "Idle",
           "actions" : {
               "event" : [ [["if", "eq", "updateLocation"],
@@ -39,7 +39,7 @@
               },
               { "name" : "Driving",
                 "actions": {
-                    "event" : [ [["if", "eq", "dropoff"],
+                    "event" : [ [["if", "eq", "dropOff"],
                                  ["send", "Ride", ".currentRide.id", "droppedOff"],
                                  "Delivered"] ],
                     "exit"  : [ [["unsync", "Ride"]] ]

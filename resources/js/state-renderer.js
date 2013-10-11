@@ -1,4 +1,4 @@
-var displayFsm = function (fsm) {
+var displayFsm = function (fsm, currentState) {
     // TK TODO dynamic diameter
     var diameter = 550,
         format = d3.format(",d");
@@ -28,7 +28,6 @@ var displayFsm = function (fsm) {
 
     var diagonal = d3.svg.diagonal.radial()
         .source(function(d) {
-            console.log(d);
             var target = {x: Math.floor(d.target.x), y: Math.floor(d.target.y)};
             var z = {x: Math.floor(d.source.x), y: Math.floor(d.source.y)};
             var r = d.source.r;
@@ -118,7 +117,9 @@ var displayFsm = function (fsm) {
         .data(pack.nodes(fsm))
       .enter().append("g")
         .attr("class", function(d) { 
-            if (d.children)
+            if (d.name == currentState)
+                return "current";
+            else if (d.children)
                 return "node";
             else if (d.parent.initialState == d.name)
                 return "initial";
