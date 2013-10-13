@@ -15,8 +15,7 @@ var fsmSchema = new mongoose.Schema({
     fsm:          {type: Object, required: true},
     name:         {type: String, required: true},
     description:  {type: String},
-    user:         {type: String}, // organizational user
-    group:        {type: String}  // logical application group for interstate communication
+    user:         {type: String} // organizational user
 }, { minimize: false });
 fsmSchema.post('save', function(doc) {
     logger.info('Saved fsm: ' + JSON.stringify(doc.toObject()));

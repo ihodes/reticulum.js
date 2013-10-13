@@ -12,7 +12,6 @@ var logger = logging.logger;
 var fsm         = require('./controllers/fsm'),
     fsmInstance = require('./controllers/fsmInstance');
 
-
 // App init
 logger.info('Starting application...');
 
@@ -62,4 +61,6 @@ app.all('*', function (req, res) {
 app.listen(config.settings.PORT, function () {
     logger.info("Listening on port " + config.settings.PORT);
 });
+
+
 

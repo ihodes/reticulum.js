@@ -6,20 +6,23 @@ var _      = require('underscore'),
     loch   = require('loch'),
     U      = require('../lib/utils'),
     fsm    = require('../models/fsm'),
+    fsmValidator = require('../lib/validate-fsm').fsmValidator,
     logger = require('../lib/logger').logger;
 require('underscore-contrib');
 
 
 var API = {
     publicFields: {_id: U._idToId, fsm: null,
-                   name: null, group: null, description: null},
+                   name: null, description: null},
 
-    // TK TODO need to do actual FSM validation. (see lib/fsmValidator for stubbed work iah@10/9/13)
-    createParams: {fsm: [true, _.always(true)], name: true,
-                   description: false, user: false, group: false}
+    createParams: {fsm: [true, fsmValidator], name: true,
+                   description: false, user: false},
+    updateParams: {fsm: [false, fsmValidator], name: false,
+                   description: false, user: false}
 };
 var cleaner = loch.allower(API.publicFields);
 var createValidator = _.partial(loch.validates, API.createParams);
+var updateValidator = _.partial(loch.validates, API.updateParams);
 
 
 exports.allFsms = function (req, res) {
@@ -36,7 +39,7 @@ exports.createFsm = function(req, res) {
 };
 
 exports.updateFsm = function(req, res) {
-    var errors = createValidator(req.body);
+    var errors = updateValidator(req.body);
     if(_.isObject(errors))
         return U.error(res, U.ERRORS.badRequest, {errors: errors});
     fsm.updateFsm(req.params.fsmId, req.body, U.sendBack(res, cleaner));
