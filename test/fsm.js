@@ -11,7 +11,8 @@ var testfsm = {
         { name: 'SubstateA1',
           actions: {
               event: [ [['if', 'eq', 'gotoA2'], 'SubstateA2'],
-                       [['if', 'eq', 'gotoSubA3'], 'SubsubstateA31'] ]
+                       [['if', 'eq', 'gotoSubA3'], 'SubsubstateA31'],
+                       [['if', 'eq', 'gotoA4'], 'SubstateA4'] ]
           },
         },
         { name: 'SubstateA2',
@@ -36,7 +37,10 @@ var testfsm = {
                 }}
           ]
         },
-        { name: 'SubstateA4' }
+        { name: 'SubstateA4',
+          actions: {
+              enter: [ [['request', 'GET', 'http://httpbin.org/get', '', 'avar']] ]
+          }}
     ]
 };
 
@@ -173,6 +177,27 @@ vows.describe('Operating with a FSM').addBatch({
             topic.lastEvent.should.be.an.instanceOf(Object);
 
             topic.currentStateName.should.equal('SubsubstateA31');
+        }
+    },
+
+    'when making an external request': {
+        topic: function() {
+            var fsmi =  reticulum.reify(testfsm);
+            fsmi = reticulum.send(fsmi, 'gotoA4');
+            return fsmi;
+        },
+
+        'the response should be stored': function(topic) {
+            should.exist(topic);
+
+            topic.should.be.an.instanceOf(Object);
+            topic.should.have.keys('fsm', 'currentStateName', 'locals', 'lastEvent');
+            topic.currentStateName.should.be.a.String;
+            topic.locals.should.be.an.instanceOf(Object);
+            topic.lastEvent.should.be.an.instanceOf(Object);
+
+            topic.locals.should.have.keys('avar');
+            topic.locals.avar.url.should.equal('http://httpbin.org/get');
         }
     }
 }).export(module);
