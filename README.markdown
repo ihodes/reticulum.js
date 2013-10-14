@@ -7,12 +7,15 @@ reticulum implements the [FSM spec](https://gist.github.com/ihodes/f009cc6642223
 
 #### Todo: 
 ###### Higher Priorities
+1. Proper Users & Auth 
+   (And therefore allowing proper Actions...
+    e.g. send and reify must use auth, and therefore must be executed in context
+    of the user operating the FSM instance)
+1. Initializing FSMs with default locals
 1. Actions: 
   1. send (to other FSM instaces in group),
   1. reify (to other FSMs in group),
-1. Tests for HTTP (and more for reticulum itself)
-1. Initializing FSMs with default locals
-1. Proper Users & Auth (and therefore proper Actions... e.g. send and reify must use auth, and therefore must be executed in context of the user operating the FSM instance)
+
 
 ###### Lower Priorities
 1. GUI for creating/editing FSMs /fsm/new.html

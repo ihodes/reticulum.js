@@ -4,17 +4,17 @@ var _            = require('underscore'),
     express      = require('express'),
     r            = require('./lib/reticulum'),
     config       = require('./config'),
-    logging      = require('./lib/logger');
+    logging      = require('./lib/logger'),
+    logger       = logging.logger,
+    fsm          = require('./controllers/fsm'),
+    fsmInstance  = require('./controllers/fsmInstance');
 require('express-namespace');
 require('underscore-contrib');
-var logger = logging.logger;
 
-var fsm         = require('./controllers/fsm'),
-    fsmInstance = require('./controllers/fsmInstance');
 
-// App init
-logger.info('Starting application...');
+logger.info('------STARTING APPLICATION------');
 
+// Setup, Middleware
 var app = express();
 app.use(express.bodyParser());
 app.use(logging.requestLogger);
@@ -23,7 +23,9 @@ app.engine('html', require('ejs').renderFile);
 app.set('views', __dirname + '/templates');
 app.use(express.static(__dirname + '/resources'));
 
-// Routing
+
+
+// Routes
 app.all('/v1', function(req, res) {
     res.send({message: "You are connected to the API", status: 200});
 });
@@ -33,34 +35,30 @@ app.namespace('/v1', function() {
         app.get('/', fsm.allFsms);
         app.post('/', fsm.createFsm);
 
-        // html for displaying the FSMs
-        app.get('/all', fsm.listFsms);
-        app.get('/:fsmId/show', fsm.showFsm); // won't work properly with the new fsm spec
-
-        // specific fsms
-        app.put('/:fsmId', fsm.updateFsm);
-        app.get('/:fsmId', fsm.getFsm);
+        app.get('/all', fsm.listFsms); // html/js
 
         app.namespace('/:fsmId', function() {
-            app.get('/all', fsmInstance.allFsmInstances);
+            app.put('/', fsm.updateFsm);
+            app.get('/', fsm.getFsm);
+
+            app.get('/show', fsm.showFsm); // html/js
+
             app.post('/reify', fsmInstance.reifyFsm);
             app.get('/:fsmInstanceId', fsmInstance.getFsmInstance);
             app.post('/:fsmInstanceId/send/:event', fsmInstance.sendEvent);
 
-            // html for displaying the fsmInstance (similar to showFsm)
-            app.get('/:fsmInstanceId/show', fsmInstance.showFsmInstance); // won't work properly with the new fsm spec
+            app.get('/:fsmInstanceId/show', fsmInstance.showFsmInstance); // html/js
         });
     })
 });
 
 app.all('*', function (req, res) {
-    res.status(404).send({error: "Not Found", status: 404});
+    res.status(404).send({error: "Not Found", message: "Method does not exist.", status: 404});
 });
+
+
 
 // App server setup
 app.listen(config.settings.PORT, function () {
-    logger.info("Listening on port " + config.settings.PORT);
+    logger.info("(started, listening on port " + config.settings.PORT + ")");
 });
-
-
-

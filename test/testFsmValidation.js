@@ -23,8 +23,6 @@ vows.describe('Validating a FSM').addBatch({
 
         'an error should be returned': function(topic) {
             topic.should.be.a.String;
-            console.log(topic.states.states.actions.event)
-
             topic.states.states.actions.event.should.eql("event must not have a transition to a state which does not exist (SubstateA2BADNO)");
          }
      },
