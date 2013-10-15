@@ -7,8 +7,7 @@ reticulum implements the [FSM spec](https://gist.github.com/ihodes/f009cc6642223
 
 #### Todo: 
 ###### Higher Priorities
-1. Initializing FSMs with default locals
-1. Actions: 
+1. Actions (need to separate concerns; keep the FSM away from actions)
   1. send (to other FSM instaces in group),
   1. reify (to other FSMs in group),
 

@@ -13,11 +13,11 @@ exports.allFsmInstances = function(user, params, callback) {
     db.fsmInstance.find({user: user}, callback);
 };
 
-exports.reifyFsm = function(user, fsmId, params, callback) {
+exports.reifyFsm = function(user, fsmId, locals, callback) {
     db.fsm.findOne({_id: fsmId, user: user}, function(err, fsm) {
         if (err || !fsm) return callback(err, null);
         var fsm        = fsm.fsm;
-        var initFields = { fsm: fsmId, currentStateName: fsm.initialStateName, locals: params, user: user };
+        var initFields = { fsm: fsmId, currentStateName: fsm.initialStateName, locals: locals, user: user };
         db.fsmInstance(initFields).save(callback);
     });
 };

@@ -1,7 +1,8 @@
 var vows     = require('vows'),
     should   = require('should'),
     logger   = require('../lib/logger').logger,
-    request  = require('request');
+    request  = require('request'),
+    _        = require('underscore');
 
 
 // Config
@@ -9,7 +10,8 @@ var BASE_URL = "http://localhost:5000/v1/",
     HEADERS  = { 'Content-Type': 'application/json' },
     AUTH     = { user: '', password: 'test' },
     NAME     = '__testFSM', 
-    DESC     = 'this is an FSM inserted by the test suite';
+    DESC     = 'this is an FSM inserted by the test suite',
+    LOCALS   = { testLocals: "This is a value", another: 123123 };
 
 
 var FSM_ID;
@@ -145,11 +147,14 @@ vows.describe('Interacting with FSMs via HTTP').addBatch({
     // POST /fsm/:id/reify -- reify a FSM
     'when reifying a FSM': {
         topic: function() {
+            var body = { locals: LOCALS };
+            body = JSON.stringify(body);
             request({
                 url: BASE_URL + 'fsm/' + FSM_ID + "/reify",
                 auth: AUTH,
                 method: 'POST',
-                headers: HEADERS
+                headers: HEADERS,
+                body: body
             }, this.callback);
         },
         
@@ -163,12 +168,12 @@ vows.describe('Interacting with FSMs via HTTP').addBatch({
             res.should.be.json;
          },
 
-        'a FSM instance should be returned': function(err, res, body) {
+        'a FSM instance should be returned with the correct locals and current state': function(err, res, body) {
             body = JSON.parse(body);
             body.should.have.keys('currentStateName', 'id', 'fsm', 'locals', 'lastEvent');
             body.fsm.should.eql(FSM_ID);
             body.currentStateName.should.eql(FSM.initialStateName);
-            body.locals.should.eql({});
+            body.locals.should.eql(LOCALS);
             // TK NOTE MUTATION
             FSM_INSTANCE_ID = body.id;
          },
@@ -178,11 +183,14 @@ vows.describe('Interacting with FSMs via HTTP').addBatch({
         'and then when sending it an event': {
             topic: function() {
                 var eventName = 'gotoA2';
+                var body = { args: { argz: 'does nothing' } };
+                body = JSON.stringify(body);
                 request({
                     url: BASE_URL + 'fsm/' + FSM_ID + "/" + FSM_INSTANCE_ID + '/send/' + eventName,
                     auth: AUTH,
                     method: 'POST',
                     headers: HEADERS,
+                    body: body
                 }, this.callback);
             },
             
@@ -196,10 +204,11 @@ vows.describe('Interacting with FSMs via HTTP').addBatch({
                 res.should.be.json;
             },
 
-            'we should be in the new state': function(err, res, body) {
+            'we should be in the new state with the correctly modified locals': function(err, res, body) {
                 body = JSON.parse(body);
                 body.should.have.keys('currentStateName', 'id', 'fsm', 'locals', 'lastEvent');
                 body.currentStateName.should.eql('SubstateA2');
+                body.locals.should.eql(_.extend(LOCALS, {'anarg': 'does nothing'}))
             }
             
         }
@@ -224,7 +233,7 @@ var FSM = {
         { name: 'SubstateA2',
           actions: {
               event: [ [['if', 'eq', 'gotoA1'], 'SubstateA1'] ],
-              enter: [ [['set', 'nestedKey.cool', 'supercoolval']] ]
+              enter: [ [['set', 'anarg', '..argz']] ]
           },
         },
         { name: 'SubstateA3',
