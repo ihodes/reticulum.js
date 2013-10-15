@@ -1,13 +1,14 @@
 'use strict';
 
-var _            = require('underscore'),
-    express      = require('express'),
-    r            = require('./lib/reticulum'),
-    config       = require('./config'),
-    logging      = require('./lib/logger'),
-    logger       = logging.logger,
-    fsm          = require('./controllers/fsm'),
-    fsmInstance  = require('./controllers/fsmInstance');
+var _             = require('underscore'),
+    express       = require('express'),
+    r             = require('./lib/reticulum'),
+    config        = require('./config'),
+    logging       = require('./lib/logger'),
+    logger        = logging.logger,
+    fsm           = require('./controllers/fsm'),
+    fsmInstance   = require('./controllers/fsmInstance'),
+    authenticator = require('./models/user').authenticator;
 require('express-namespace');
 require('underscore-contrib');
 
@@ -17,6 +18,7 @@ logger.info('------STARTING APPLICATION------');
 // Setup, Middleware
 var app = express();
 app.use(express.bodyParser());
+app.use(express.basicAuth(authenticator));
 app.use(logging.requestLogger);
 app.use(express.errorHandler());
 app.engine('html', require('ejs').renderFile);

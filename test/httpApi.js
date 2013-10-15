@@ -7,6 +7,7 @@ var vows     = require('vows'),
 // Config
 var BASE_URL = "http://localhost:5000/v1/",
     HEADERS  = { 'Content-Type': 'application/json' },
+    AUTH     = { user: '', password: 'test' },
     NAME     = '__testFSM', 
     DESC     = 'this is an FSM inserted by the test suite';
 
@@ -20,6 +21,7 @@ vows.describe('Interacting with FSMs via HTTP').addBatch({
             var body = { fsm: FSM, name: NAME, description: DESC };
             request({
                 url: BASE_URL + 'fsm',
+                auth: AUTH,
                 method: 'POST',
                 headers: HEADERS,
                 body: JSON.stringify(body)
@@ -49,6 +51,7 @@ vows.describe('Interacting with FSMs via HTTP').addBatch({
             topic: function() {
                 request({
                     url: BASE_URL + 'fsm/' + FSM_ID,
+                    auth: AUTH,
                     method: 'GET',
                     headers: HEADERS,
                 }, this.callback);
@@ -77,6 +80,7 @@ vows.describe('Interacting with FSMs via HTTP').addBatch({
             topic: function() {
                 request({
                     url: BASE_URL + 'fsm',
+                    auth: AUTH,
                     method: 'GET',
                     headers: HEADERS,
                 }, this.callback);
@@ -113,6 +117,7 @@ vows.describe('Interacting with FSMs via HTTP').addBatch({
             var body = { fsm: FSM, name: NAME };
             request({
                 url: BASE_URL + 'fsm/' + FSM_ID,
+                auth: AUTH,
                 method: 'PUT',
                 headers: HEADERS,
                 body: JSON.stringify(body)
@@ -142,6 +147,7 @@ vows.describe('Interacting with FSMs via HTTP').addBatch({
         topic: function() {
             request({
                 url: BASE_URL + 'fsm/' + FSM_ID + "/reify",
+                auth: AUTH,
                 method: 'POST',
                 headers: HEADERS
             }, this.callback);
@@ -174,6 +180,7 @@ vows.describe('Interacting with FSMs via HTTP').addBatch({
                 var eventName = 'gotoA2';
                 request({
                     url: BASE_URL + 'fsm/' + FSM_ID + "/" + FSM_INSTANCE_ID + '/send/' + eventName,
+                    auth: AUTH,
                     method: 'POST',
                     headers: HEADERS,
                 }, this.callback);

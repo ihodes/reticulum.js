@@ -7,18 +7,19 @@ var _      = require('underscore'),
     logger = require('../lib/logger').logger;
 
 
-exports.allFsms = function(params, callback) {
-    db.fsm.find({}, callback);
+
+exports.allFsms = function(user, params, callback) {
+    db.fsm.find({user: user}, callback);
 };
 
-exports.createFsm = function(params, callback) {
-    db.fsm(params).save(callback);
+exports.createFsm = function(user, params, callback) {
+    db.fsm(_.extend(params, {user: user})).save(callback);
 };
 
-exports.updateFsm = function(fsmId, params, callback) {
-    db.fsm.findByIdAndUpdate(fsmId, params, callback);
+exports.updateFsm = function(user, fsmId, params, callback) {
+    db.fsm.findOneAndUpdate({_id: fsmId, user: user}, params, callback);
 };
 
-exports.getFsm = function(fsmId, callback) {
-    db.fsm.findById(fsmId, callback);
+exports.getFsm = function(user, fsmId, callback) {
+    db.fsm.findOne({_id: fsmId, user: user}, callback);
 };

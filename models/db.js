@@ -10,12 +10,25 @@ require('underscore-contrib');
 var ObjectId = mongoose.Schema.ObjectId;
 
 
+var userSchema = new mongoose.Schema({
+    createdAt:    { type: Date,    default: Date.now },
+    name:         { type: String,  required: true, unique: true },
+    key:          { type: String,  required: true },
+    superuser:    { type: Boolean, default: false }
+});
+userSchema.post('save', function(doc) {
+    logger.info('Saved user: ' + JSON.stringify(doc.toObject()));
+});
+exports.user = mongoose.model('user', userSchema);
+
+
 var fsmSchema = new mongoose.Schema({
-    createdAt:    {type: Date, default: Date.now},
-    fsm:          {type: Object, required: true},
-    name:         {type: String, required: true},
-    description:  {type: String},
-    user:         {type: String} // organizational user
+    createdAt:    { type: Date,     default: Date.now },
+    user:         { type: ObjectId, required: true, ref: 'user' },
+
+    fsm:          { type: Object,   required: true },
+    name:         { type: String,   required: true },
+    description:  { type: String },
 }, { minimize: false });
 fsmSchema.post('save', function(doc) {
     logger.info('Saved fsm: ' + JSON.stringify(doc.toObject()));
@@ -24,11 +37,14 @@ exports.fsm = mongoose.model('fsm', fsmSchema);
 
 
 var fsmInstanceSchema = new mongoose.Schema({
-    createdAt:    {type: Date, default: Date.now},
-    fsm: {type: ObjectId, ref: 'fsm', required: true},
-    locals: {type: Object, required: true, default: {}},
-    currentStateName: {type: String, required: true},
-    lastEvent: {type: {name: String, args: Object}, required: true, default: {name: null, args: {}}}
+    createdAt:        { type: Date,     default: Date.now },
+    user:             { type: ObjectId, required: true, ref: 'user' },
+
+    fsm:              { type: ObjectId, ref: 'fsm', required: true },
+    locals:           { type: Object,   required: true, default: {} },
+    currentStateName: { type: String,   required: true },
+    lastEvent:        { type: {name: String, args: Object},
+                        default: {name: null, args: {}} }
 }, { minimize: false });
 fsmInstanceSchema.post('save', function(doc) {
     logger.info('Saved fsm instance: ' + JSON.stringify(doc.toObject()));

@@ -9,6 +9,7 @@ var _           = require('underscore'),
     logger      = require('../lib/logger').logger;
 
 
+
 var API = {
     publicFields: { _id: U._idToId, currentStateName: null, fsm: null, lastEvent: null, locals: null }
 };
@@ -16,22 +17,24 @@ var cleaner = loch.allower(API.publicFields);
 
 
 exports.allFsmInstances = function (req, res) {
-    fsmInstance.allFsmInstances(req.params, U.sendBack(res, function(res) {
+    fsmInstance.allFsmInstances(req.user, req.params, U.sendBack(res, function(res) {
         return { fsmInstances: _.map(res, cleaner) };
     }));
 };
 
 exports.reifyFsm = function(req, res) {
-    fsmInstance.reifyFsm(req.params.fsmId, req.body, U.sendBack(res, 201, cleaner));
+    fsmInstance.reifyFsm(req.user, req.params.fsmId, req.body,
+                         U.sendBack(res, 201, cleaner));
 };
 
 exports.getFsmInstance = function(req, res) {
-    fsmInstance.getFsmInstance(req.params.fsmInstanceId, req.body, U.sendBack(res, cleaner));
+    fsmInstance.getFsmInstance(req.user, req.params.fsmInstanceId, req.body,
+                               U.sendBack(res, cleaner));
 };
 
 exports.sendEvent = function(req, res) {
-    fsmInstance.sendEvent(req.params.fsmInstanceId, req.params.fsmId, req.params.event,
-                   req.body, U.sendBack(res, cleaner));
+    fsmInstance.sendEvent(req.user, req.params.fsmInstanceId, req.params.fsmId,
+                          req.params.event, req.body, U.sendBack(res, cleaner));
 };
 
 
@@ -40,6 +43,7 @@ exports.sendEvent = function(req, res) {
  //// HTML stuff hurr ////
 /////////////////////////
 
+// TK INSECURE not secure (need to ensure that the fsm belongs to the user)
 exports.showFsmInstance = function(req, res) {
-    res.render('show.html', {id: req.params.fsmId, fsmInstanceId: req.params.fsmInstanceId});
+    res.render('fsm/show.ejs', {id: req.params.fsmId, fsmInstanceId: req.params.fsmInstanceId});
 };

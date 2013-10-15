@@ -26,7 +26,7 @@ var updateValidator = _.partial(loch.validates, API.updateParams);
 
 
 exports.allFsms = function (req, res) {
-    fsm.allFsms(req.params, U.sendBack(res, function(res) {
+    fsm.allFsms(req.user, req.params, U.sendBack(res, function(res) {
         return { fsms: _.map(res, cleaner) };
     }));
 };
@@ -35,18 +35,18 @@ exports.createFsm = function(req, res) {
     var errors = createValidator(req.body);
     if(_.isObject(errors))
         return U.error(res, U.ERRORS.badRequest, {errors: errors});
-    fsm.createFsm(req.body, U.sendBack(res, 201, cleaner));
+    fsm.createFsm(req.user, req.body, U.sendBack(res, 201, cleaner));
 };
 
 exports.updateFsm = function(req, res) {
     var errors = updateValidator(req.body);
     if(_.isObject(errors))
         return U.error(res, U.ERRORS.badRequest, {errors: errors});
-    fsm.updateFsm(req.params.fsmId, req.body, U.sendBack(res, cleaner));
+    fsm.updateFsm(req.user, req.params.fsmId, req.body, U.sendBack(res, cleaner));
 };
 
 exports.getFsm = function(req, res) {
-    fsm.getFsm(req.params.fsmId, U.sendBack(res, cleaner));
+    fsm.getFsm(req.user, req.params.fsmId, U.sendBack(res, cleaner));
 };
 
 
@@ -55,11 +55,12 @@ exports.getFsm = function(req, res) {
  //// HTML stuff hurr ////
 /////////////////////////
 exports.listFsms = function(req, res) {
-    fsm.allFsms(req.params, U.sendBack(res, function(results) {
-        return res.render('all.html', {fsms: _.map(results, cleaner)});
+    fsm.allFsms(req.user, req.params, U.sendBack(res, function(results) {
+        return res.render('fsm/all.ejs', {fsms: _.map(results, cleaner)});
     }));
 };
 
+// TK INSECURE not secure (need to ensure that the fsm belongs to the user)
 exports.showFsm = function(req, res) {
-    res.render('show.html', {id: req.params.fsmId, fsmInstanceId: ''});
+    res.render('fsm/show.ejs', {id: req.params.fsmId, fsmInstanceId: ''});
 };

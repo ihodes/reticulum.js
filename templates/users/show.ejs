@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>retic://users/<%= userId %></title>
+    <script src="/js/d3.v3.min.js"></script>
+    <script src="/js/underscore-min.js"></script>
+  </head>
+  <body>
+    <script>
+    d3.json("/v1/users/<%= userId %>", function(error, user) {
+      if (error) {
+        d3.select('pre').text("404 NOT FOUND");
+        return console.warn(error);
+      } else {
+         window.user = user;
+         d3.select("h2").text(user.username);
+         d3.select("#info").html(user.id); // add in list of fsms later
+      }
+    });
+    </script>
+
+    <h2></h2>
+    <pre id="info" class="boxd"><img src="/imgs/loader.gif" alt="loader" class="loading"></pre>
+  </body>
+</html>
