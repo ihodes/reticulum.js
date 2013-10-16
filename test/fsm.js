@@ -4,6 +4,10 @@ var vows      = require('vows'),
     logger    = require('../lib/logger').logger,
     reticulum = require('../lib/reticulum');
 
+
+
+var USER_CONTEXT = {};
+
 var testfsm = {
     name: 'StateA',
     initialStateName: 'SubstateA1',
@@ -69,7 +73,7 @@ vows.describe('Operating with a FSM').addBatch({
      'when sending an event that should transition': {
          topic: function() {
              var fsmi =  reticulum.reify(testfsm);
-             fsmi = reticulum.send(fsmi, 'gotoA2');
+             fsmi = reticulum.send(fsmi, USER_CONTEXT, 'gotoA2');
              return fsmi;
          },
 
@@ -90,7 +94,7 @@ vows.describe('Operating with a FSM').addBatch({
     'when sending an event that has an enter event, and transitions': {
         topic: function() {
             var fsmi =  reticulum.reify(testfsm);
-            fsmi = reticulum.send(fsmi, 'gotoSubA3');
+            fsmi = reticulum.send(fsmi, USER_CONTEXT, 'gotoSubA3');
             return fsmi;
         },
 
@@ -115,7 +119,7 @@ vows.describe('Operating with a FSM').addBatch({
     'when transitioning into a state that sets a nested local key': {
         topic: function() {
             var fsmi =  reticulum.reify(testfsm);
-            fsmi = reticulum.send(fsmi, 'gotoA2');
+            fsmi = reticulum.send(fsmi, USER_CONTEXT, 'gotoA2');
             return fsmi;
         },
 
@@ -138,8 +142,8 @@ vows.describe('Operating with a FSM').addBatch({
     'when transitioning into a state that clears a key': {
         topic: function() {
             var fsmi =  reticulum.reify(testfsm);
-            fsmi = reticulum.send(fsmi, 'gotoSubA3');
-            fsmi = reticulum.send(fsmi, 'goDeep!');
+            fsmi = reticulum.send(fsmi, USER_CONTEXT, 'gotoSubA3');
+            fsmi = reticulum.send(fsmi, USER_CONTEXT, 'goDeep!');
             return fsmi;
         },
 
@@ -161,9 +165,9 @@ vows.describe('Operating with a FSM').addBatch({
     'when transitioning a few times': {
         topic: function() {
             var fsmi =  reticulum.reify(testfsm);
-            fsmi = reticulum.send(fsmi, 'gotoA2');
-            fsmi = reticulum.send(fsmi, 'gotoA1');
-            fsmi = reticulum.send(fsmi, 'gotoSubA3');
+            fsmi = reticulum.send(fsmi, USER_CONTEXT, 'gotoA2');
+            fsmi = reticulum.send(fsmi, USER_CONTEXT, 'gotoA1');
+            fsmi = reticulum.send(fsmi, USER_CONTEXT, 'gotoSubA3');
             return fsmi;
         },
 
@@ -183,7 +187,7 @@ vows.describe('Operating with a FSM').addBatch({
     'when making an external request': {
         topic: function() {
             var fsmi =  reticulum.reify(testfsm);
-            fsmi = reticulum.send(fsmi, 'gotoA4');
+            fsmi = reticulum.send(fsmi, USER_CONTEXT, 'gotoA4');
             return fsmi;
         },
 

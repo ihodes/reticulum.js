@@ -14,8 +14,10 @@ var userSchema = new mongoose.Schema({
     createdAt:    { type: Date,    default: Date.now },
     name:         { type: String,  required: true, unique: true },
     key:          { type: String,  required: true },
-    superuser:    { type: Boolean, default: false }
-});
+    superuser:    { type: Boolean, default: false },
+
+    context:      { type: Object, default: {}, required: true }
+}, { minimize: false });
 userSchema.post('save', function(doc) {
     logger.info('Saved user: ' + JSON.stringify(doc.toObject()));
 });

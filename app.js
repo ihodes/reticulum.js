@@ -6,6 +6,7 @@ var _             = require('underscore'),
     config        = require('./config'),
     logging       = require('./lib/logger'),
     logger        = logging.logger,
+    user          = require('./controllers/user'),
     fsm           = require('./controllers/fsm'),
     fsmInstance   = require('./controllers/fsmInstance'),
     authenticator = require('./models/user').authenticator;
@@ -33,6 +34,11 @@ app.all('/v1', function(req, res) {
 });
 
 app.namespace('/v1', function() {
+    app.namespace('/user', function() {
+        app.get('/:userId', user.getUser);
+        app.post('/:userId/context', user.setContext);
+    });
+
     app.namespace('/fsm', function() {
         app.get('/', fsm.allFsms);
         app.post('/', fsm.createFsm);

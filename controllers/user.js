@@ -11,7 +11,7 @@ require('underscore-contrib');
 
 
 var API = {
-    publicFields: { _id: U._idToId, username: null },
+    publicFields: { _id: U._idToId, name: null, context: null },
     createParams: { username: true },
 };
 var cleaner = loch.allower(API.publicFields);
@@ -32,11 +32,8 @@ exports.createUser = function(req, res) {
     user.createUser(req.user, req.body, U.sendBack(res, 201, cleaner));
 };
 
-exports.updateUser = function(req, res) {
-    var errors = updateValidator(req.body);
-    if(_.isObject(errors))
-        return U.error(res, U.ERRORS.badRequest, {errors: errors});
-    user.updateUser(req.user, req.params.userId, req.body, U.sendBack(res, cleaner));
+exports.setContext = function(req, res) {
+    user.setContext(req.user, req.params.userId, req.body, U.sendBack(res, cleaner));
 };
 
 exports.getUser = function(req, res) {

@@ -7,12 +7,22 @@ reticulum implements the [FSM spec](https://gist.github.com/ihodes/f009cc6642223
 
 #### Todo: 
 ###### Higher Priorities
+1. FSM and Instance-specific basic auth-keys instance:123-xyz-abc-456
+   e.g. need to be able to reify a FSM from a client, and be able to operate the reified machine from the client as well. Don't want to give up user api key for that. Perhaps need to allow reification to be publiccally available, and return the key for the instance reified for the client to store/be able to lookup on login.
+   -- soln. easy-just have a field with a random 64 char value on all FSM and FSM Instances that can be used to access them if the use isn't authenticated. 
 1. Actions (need to separate concerns; keep the FSM away from actions)
+  -- soln? perhaps just keep actions in reticulum, but pass required info via the userContext (see User-lebel context and lookup, above)
   1. send (to other FSM instaces in group),
   1. reify (to other FSMs in group),
+  
+##### Test...
+1. User context gets passed along and works well
+1. Tests for each action
+1. More error tests (make sure the API returns reasonable errors)
 
 
 ###### Lower Priorities
+1. make it nicer/easier to update user's context (right now you have to replace the entire JSON)
 1. GUI for creating/editing FSMs /fsm/new.html
 1. Hook up to backing services e.g. Twilio, Mailgun to start
 1. Schedule reification of FSMs (can schedule with a given global state object; this
