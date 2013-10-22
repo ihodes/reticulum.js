@@ -12,8 +12,7 @@ require('underscore-contrib');
 
 
 var API = {
-    publicFields: {_id: U._idToId, fsm: null,
-                   name: null, description: null},
+    publicFields: {_id: U._idToId, fsm: null, name: null, description: null},
 
     createParams: {fsm: [true, fsmValidator], name: true,
                    description: false, user: false},
@@ -54,10 +53,11 @@ exports.getFsm = function(req, res) {
   /////////////////////////
  //// HTML stuff hurr ////
 /////////////////////////
+
 exports.listFsms = function(req, res) {
     fsm.allFsms(req.user, req.params, U.sendBack(res, function(results) {
-        return res.render('fsm/all.ejs', {fsms: _.map(results, cleaner)});
-    }));
+        return res.render('fsm/all.ejs', { fsms: _.map(results, cleaner) });
+    }, true));
 };
 
 // TK INSECURE not secure (need to ensure that the fsm belongs to the user)

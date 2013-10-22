@@ -5,9 +5,18 @@ var mongoose = require('mongoose'),
     _        = require('underscore'),
     logger   = require('../lib/logger').logger,
     U        = require('../lib/utils'),
-    loch     = require('loch');
+    loch     = require('loch'),
+    crypto   = require('crypto');
 require('underscore-contrib');
 var ObjectId = mongoose.Schema.ObjectId;
+
+
+
+var randomStringMaker = function(len) {
+    return function() {
+        return crypto.randomBytes(len).toString('hex');
+    };
+};
 
 
 var userSchema = new mongoose.Schema({
@@ -39,6 +48,9 @@ exports.fsm = mongoose.model('fsm', fsmSchema);
 
 
 var fsmInstanceSchema = new mongoose.Schema({
+    auth:             { type: String,   default: randomStringMaker(32),
+                        required: true },
+
     createdAt:        { type: Date,     default: Date.now },
     user:             { type: ObjectId, required: true, ref: 'user' },
 

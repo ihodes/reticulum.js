@@ -34,6 +34,6 @@ exports.getUser = function(user, userId, callback) {
 
 
 // Basic Auth
-exports.authenticator = function(name, key, callback) {
+exports.authenticator = function(__, key, callback) {
     db.user.findOne({key: key}, callback);
 };

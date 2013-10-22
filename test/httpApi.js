@@ -16,6 +16,7 @@ var BASE_URL = "http://localhost:5000/v1/",
 
 var FSM_ID;
 var FSM_INSTANCE_ID;
+var FSM_INSTANCE_AUTH;
 vows.describe('Interacting with FSMs via HTTP').addBatch({
     // POST /fsm -- create new FSM
     'when creating a new FSM': {
@@ -46,6 +47,7 @@ vows.describe('Interacting with FSMs via HTTP').addBatch({
             should.exist(body.id);
             // TK NOTE MUTATION
             FSM_ID = body.id;
+            FSM_AUTH = body.auth;
          },
 
         // GET /fsm/:id -- return exact FSM
@@ -105,7 +107,8 @@ vows.describe('Interacting with FSMs via HTTP').addBatch({
             
             'should include the new FSM': function(err, res, body) {
                 body = JSON.parse(body);
-                body.fsms.should.includeEql({ fsm: FSM, name: NAME, id: FSM_ID, description: DESC  });
+                body.fsms.should.includeEql({ fsm: FSM, name: NAME, id: FSM_ID,
+                                              description: DESC });
             },
         },
     },
@@ -170,12 +173,14 @@ vows.describe('Interacting with FSMs via HTTP').addBatch({
 
         'a FSM instance should be returned with the correct locals and current state': function(err, res, body) {
             body = JSON.parse(body);
-            body.should.have.keys('currentStateName', 'id', 'fsm', 'locals', 'lastEvent');
+            body.should.have.keys('currentStateName', 'id', 'fsm', 'locals', 'lastEvent', 'auth');
             body.fsm.should.eql(FSM_ID);
             body.currentStateName.should.eql(FSM.initialStateName);
             body.locals.should.eql(LOCALS);
+
             // TK NOTE MUTATION
             FSM_INSTANCE_ID = body.id;
+            FSM_INSTANCE_AUTH = body.auth;
          },
 
 
@@ -206,12 +211,37 @@ vows.describe('Interacting with FSMs via HTTP').addBatch({
 
             'we should be in the new state with the correctly modified locals': function(err, res, body) {
                 body = JSON.parse(body);
-                body.should.have.keys('currentStateName', 'id', 'fsm', 'locals', 'lastEvent');
+                body.should.have.keys('currentStateName', 'id', 'fsm', 'locals', 'lastEvent', 'auth');
                 body.currentStateName.should.eql('SubstateA2');
                 body.locals.should.eql(_.extend(LOCALS, {'anarg': 'does nothing'}))
             }
             
+        },
+
+
+        'and then when getting it with the auth token': {
+            topic: function() {
+                request({
+                    url: BASE_URL + 'fsm/' + FSM_ID + "/" + FSM_INSTANCE_ID,
+                    auth: { user: 'instance', pass: FSM_INSTANCE_AUTH },
+                    method: 'GET',
+                    headers: HEADERS
+                }, this.callback);
+            },
+            
+            '200 should be returned': function(err, res, body) {
+                should.exist(res);
+                res.should.be.a.object;
+                res.statusCode.should.eql(200);
+            },
+            
+            'should return JSON content-type': function(err, res, body) {
+                res.should.be.json;
+            },
         }
+
+
+
 
     }
 }).export(module);

@@ -9,32 +9,45 @@ var _         = require('underscore'),
 
 
 
-exports.allFsmInstances = function(user, params, callback) {
-    db.fsmInstance.find({user: user}, callback);
+exports.allFsmInstances = function(query, callback) {
+    db.fsmInstance.find(query, callback);
 };
 
-exports.reifyFsm = function(user, fsmId, locals, callback) {
-    db.fsm.findOne({_id: fsmId, user: user}, function(err, fsm) {
+exports.reifyFsm = function(query, locals, callback) {
+    db.fsm.findOne(query, function(err, fsm) {
         if (err || !fsm) return callback(err, null);
-        var fsm        = fsm.fsm;
-        var initFields = { fsm: fsmId, currentStateName: fsm.initialStateName, locals: locals, user: user };
+        var initFields = { fsm:              fsm._id,
+                           currentStateName: fsm.fsm.initialStateName,
+                           locals:           locals,
+                           user:             fsm.user };
         db.fsmInstance(initFields).save(callback);
     });
 };
 
-exports.getFsmInstance = function(user, fsmInstanceId, params, callback) {
-    db.fsmInstance.findOne({_id: fsmInstanceId, user: user}, callback);
+exports.getFsmInstance = function(query, params, callback) {
+    db.fsmInstance.findOne(query, callback);
 };
 
-exports.sendEvent = function(user, fsmInstanceId, fsmId, evt, params, callback) {
-    db.fsmInstance.findOne({_id: fsmInstanceId, user: user})
+exports.sendEvent = function(query, evt, params, callback) {
+    db.fsmInstance.findOne(query)
       .populate('fsm')
       .exec(function(err, fsmInstance) {
           if (err || !fsmInstance) return callback(err, null);
-          var fsmi = {fsm: fsmInstance.fsm.fsm, currentStateName: fsmInstance.currentStateName,
-                      lastEvent: fsmInstance.lastEvent, locals: fsmInstance.locals};
-          var newInstance  = reticulum.send(fsmi, user.context, evt, params);
-          var updateFields = _.pick(newInstance, 'currentStateName', 'lastEvent', 'locals');
-          db.fsmInstance.findOneAndUpdate({_id: fsmInstance._id, user: user}, updateFields, callback);
+          var fsmi = { fsm:              fsmInstance.fsm.fsm,
+                       currentStateName: fsmInstance.currentStateName,
+                       lastEvent:        fsmInstance.lastEvent,
+                       locals:           fsmInstance.locals };
+          db.user.findOne({ _id: fsmInstance.user }, function(err, user) {
+            if (err || !user) return callback(err, null);
+            var fsmi_  = reticulum.send(fsmi, user.context, evt, params);
+            var updateFields = _.pick(fsmi_, 'currentStateName', 'lastEvent', 'locals');
+            db.fsmInstance.findOneAndUpdate(query, updateFields, callback);
+          });
       });
+};
+
+
+// Basic Auth
+exports.authenticator = function(__, key, callback) {
+    db.fsmInstance.findOne({auth: key}, callback);
 };
