@@ -20,12 +20,12 @@ exports.reifyFsm = function(query, locals, callback) {
                            currentStateName: fsm.fsm.initialStateName,
                            locals:           locals,
                            user:             fsm.user };
-        db.fsmInstance(initFields).save(callback);
+        return db.fsmInstance(initFields).save(callback);
     });
 };
 
 exports.getFsmInstance = function(query, params, callback) {
-    db.fsmInstance.findOne(query, callback);
+    return db.fsmInstance.findOne(query, callback);
 };
 
 exports.sendEvent = function(query, evt, params, callback) {
@@ -39,9 +39,10 @@ exports.sendEvent = function(query, evt, params, callback) {
                        locals:           fsmInstance.locals };
           db.user.findOne({ _id: fsmInstance.user }, function(err, user) {
             if (err || !user) return callback(err, null);
-            var fsmi_  = reticulum.send(fsmi, user.context, evt, params);
+            var userContext = _.extend(user.context, {_id: user._id});
+            var fsmi_  = reticulum.send(fsmi, userContext, evt, params, res);
             var updateFields = _.pick(fsmi_, 'currentStateName', 'lastEvent', 'locals');
-            db.fsmInstance.findOneAndUpdate(query, updateFields, callback);
+            return db.fsmInstance.findOneAndUpdate(query, updateFields, callback);
           });
       });
 };

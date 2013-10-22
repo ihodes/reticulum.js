@@ -7,26 +7,15 @@ reticulum implements the [FSM spec](https://gist.github.com/ihodes/f009cc6642223
 
 #### Todo: 
 ###### Higher Priorities
-
- BELOW IN PROGRESS: need to deal with the basic auth madness, now. 
- --- 
-1. Actions (need to separate concerns; keep the FSM away from actions)
-  -- soln? perhaps just keep actions in reticulum, but pass required info via the userContext (see User-lebel context and lookup, above)
-  1. send (to other FSM instaces in group),
-  1. reify (to other FSMs in group),
-  1. logging (needs to be improved)
-1. Consider/ensure no race conditions
 1. Remote Mongo documents
-1. HTTP responses can be sent from FSMs
-  1. should be paired with a way to stop event propagation
   
 ##### Test...
 1. User context gets passed along and works well
 1. Tests for each action
 1. More error tests (make sure the API returns reasonable errors)
 
-
 ###### Lower Priorities
+1. better logging (in app and for FSM instances; instances should log to a certain place that users can see...)
 1. make it nicer/easier to update user's context (right now you have to replace the entire JSON)
 1. GUI for creating/editing FSMs /fsm/new.html
 1. Hook up to backing services e.g. Twilio, Mailgun to start

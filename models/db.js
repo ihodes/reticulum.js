@@ -106,5 +106,4 @@ var connect = function() {
         logger.info('Mongoose fullsetup: ' + config.settings.MONGO_URL);
     });
 };
-
-connect();
+exports.connect = connect;

@@ -7,6 +7,7 @@ var _             = require('underscore'),
     logging       = require('./lib/logger'),
     logger        = logging.logger,
     user          = require('./controllers/user'),
+    db            = require('./models/db'),
     fsms          = require('./controllers/fsm'),
     fsmInstances  = require('./controllers/fsmInstance'),
     authBy        = require('./lib/auth').authBy,
@@ -15,27 +16,37 @@ var _             = require('underscore'),
 require('express-namespace');
 require('underscore-contrib');
 
+var authMap = { '':       { cb: userAuth, name: 'user' },
+                instance: { cb: instanceAuth, name: 'fsmInstance' } };
+
+
 
 logger.info('------STARTING APPLICATION------');
+db.connect();
 
-// Setup, Middleware
+
+  /////////////////
+ //  Middleware //
+/////////////////
+
 var app = express();
 app.use(express.bodyParser());
-app.use(authBy({ '':       { cb: userAuth, name: 'user' },
-                 instance: { cb: instanceAuth, name: 'fsmInstance' } }));
+app.use(authBy(authMap));
 app.use(logging.requestLogger);
 app.use(express.errorHandler()); // TK TODO disable on production
-app.engine('html', require('ejs').renderFile);
-app.set('views', __dirname + '/templates');
 app.use(express.static(__dirname + '/resources'));
+app.set('views', __dirname + '/templates');
+app.engine('html', require('ejs').renderFile);
 
 
-// Routes
-app.all('/v1', function(req, res) {
-    res.send({message: "You are connected to the API", status: 200});
-});
+  ///////////////
+ //  Routes   //
+///////////////
 
 app.namespace('/v1', function() {
+    app.all('/', function(req, res) {
+        res.send({message: "You are connected to the API", status: 200});
+    });
     app.namespace('/fsm', function() {
         app.get('/', fsms.allFsms);
         app.post('/', fsms.createFsm);
@@ -63,12 +74,16 @@ app.namespace('/v1', function() {
 });
 
 app.all('*', function (req, res) {
-    res.status(404).send({error: "Not Found", message: "Method does not exist.", status: 404});
+    res.status(404).send({ error: "Not Found",
+                           message: "Method does not exist.",
+                           status: 404 });
 });
 
 
+  /////////////
+ // Starter //
+/////////////
 
-// App server setup
 app.listen(config.settings.PORT, function () {
     logger.info("(started, listening on port " + config.settings.PORT + ")");
 });
