@@ -1,6 +1,8 @@
 # Reticulum
 
-Reticulum is an implementation of extended finite state machines (FSMs) defined and stored with JSON, as well as a set of procedures which the machines can execute. Additionally, it provides an secure HTTP API on top of these machines, as well as a granular authentication system for operating individual instances of a FSM. It also provided a simple HTML/JavaScript interface for navigating, operating, and visualizing these FSMs.
+The networked state machine is a way to tie arbitrary events to contextual state and side-effects.
+
+Reticulum is an implementation of networked extended finite state machines (neFSMs) defined and stored with JSON, as well as a set of procedures which the machines can execute. Additionally, it provides an secure HTTP API on top of these machines, as well as a granular authentication system for operating individual instances of a FSM. It also provided a simple HTML/JavaScript interface for navigating, operating, and visualizing these FSMs.
 
 ## Docs
 
@@ -12,10 +14,16 @@ Globals implemented are documented at globals.md.
 
 ## Setup
 
-To set up, `cp .envTemplate .env`, make sure you have foreman installed via the [Heroku toolbelt](https://toolbelt.heroku.com/), `npm install` dependencies, and run with `make`. Test with `make test`. Need vows in order to run tests (`npm install vows -g`).
+To set up, `cp .envTemplate .env`, make sure you have foreman installed via the [Heroku toolbelt](https://toolbelt.heroku.com/), run `npm install` to install dependencies. Additionally, [MongoDB](http://www.mongodb.org/) must be installed and running. Start the server with `make`.
+
+You need [vows](http://vowsjs.org/) in order to run tests: `npm install vows -g`. Run test suite with `make test`.
 
 
 ### Todo: 
+#### Primary
+1. Define notion of adapters; ways to tie existing events in the world (emails, shipment tracking, tweets, phone calls, etc) to the FSM. Idea: concept of "adapters" which map the event to a POST to /send.
+1. Refine API-abiity of FSM instances with respond method and others... should be able to communicate more information with a FSM with events.
+
 #### Features
 1. Better respond action... this is tricky.
 1. Remote Mongo documents

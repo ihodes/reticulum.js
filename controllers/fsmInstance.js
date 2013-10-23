@@ -22,8 +22,8 @@ var reifyValidator = _.partial(loch.validates, API.reifyParams);
 var eventValidator = _.partial(loch.validates, API.eventParams);
 
 
-exports.allFsmInstances = function(req, res) {
-    var query = { user: req.user };
+exports.getFsmInstances = function(req, res) {
+    var query = { user: req.user, fsm: req.params.fsmId };
     fsmInstance.allFsmInstances(query, U.sendBack(res, function(res) {
         return { fsmInstances: _.map(res, cleaner) };
     }));
@@ -40,14 +40,15 @@ exports.reifyFsm = function(req, res) {
 };
 
 exports.getFsmInstance = function(req, res) {
-    // this we we can authenticate with just the fsminstance information
+    // this way we can authenticate with just the fsmInstance information
     var query = { _id: req.params.fsmInstanceId, user: req.user };
     if (req.fsmInstance) {
-        // TK TODO: wtf. even though in auth, we call toObject, we're still
-        //          getting the crappy internal mongo BSONy object. So we do this
-        //          shit so we can get the fsm's id out.
+        // TK TODO: wtf. even though in lib/auth, we call toObject, we're still
+        //          getting the crappy internal mongo BSONy object. So we do
+        //          this shit so we can get the fsm's id out properly.
         req.fsmInstance = JSON.parse(JSON.stringify(req.fsmInstance));
         if (req.fsmInstance._id !== query._id)
+            // Really, not authorized. But don't want to leak that information.
             return U.error(res, U.ERRORS.notFound);
         else
             delete query['user'];
@@ -57,10 +58,15 @@ exports.getFsmInstance = function(req, res) {
 };
 
 exports.sendEvent = function(req, res) {
-    // this we we can authenticate with just the fsminstance information
+    // this way we can authenticate with just the fsmInstance information
     var query = { _id: req.params.fsmInstanceId, user: req.user };
     if (req.fsmInstance) {
+        // TK TODO: wtf. even though in lib/auth, we call toObject, we're still
+        //          getting the crappy internal mongo BSONy object. So we do
+        //          this shit so we can get the fsm's id out properly.
+        req.fsmInstance = JSON.parse(JSON.stringify(req.fsmInstance));
         if (req.fsmInstance._id !== query._id)
+            // Really, not authorized. But don't want to leak that information.
             return U.error(res, U.ERRORS.notFound);
         else
             delete query['user'];

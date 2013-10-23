@@ -21,10 +21,6 @@ var authMap = { '':       { cb: userAuth, name: 'user' },
 
 
 
-logger.info('------STARTING APPLICATION------');
-db.connect();
-
-
   /////////////////
  //  Middleware //
 /////////////////
@@ -39,6 +35,7 @@ app.set('views', __dirname + '/templates');
 app.engine('html', require('ejs').renderFile);
 
 
+
   ///////////////
  //  Routes   //
 ///////////////
@@ -51,19 +48,26 @@ app.namespace('/v1', function() {
         app.get('/', fsms.allFsms);
         app.post('/', fsms.createFsm);
 
-        app.get('/all', fsms.listFsms); // html/js
+        // html/js
+        app.get('/all', fsms.listFsms);
 
         app.namespace('/:fsmId', function() {
-            app.put('/', fsms.updateFsm);
             app.get('/', fsms.getFsm);
+            app.put('/', fsms.updateFsm);
 
-            app.get('/show', fsms.showFsm); // html/js
+            // html/js
+            app.get('/show', fsms.showFsm);
+
+            app.get('/instances', fsmInstances.getFsmInstances);
 
             app.post('/reify', fsmInstances.reifyFsm);
-            app.get('/:fsmInstanceId', fsmInstances.getFsmInstance);
-            app.post('/:fsmInstanceId/send/:event', fsmInstances.sendEvent);
+            app.namespace('/:fsmInstanceId', function() {
+                app.get('/', fsmInstances.getFsmInstance);
+                app.post('/send/:event', fsmInstances.sendEvent);
 
-            app.get('/:fsmInstanceId/show', fsmInstances.showFsmInstance); // html/js
+                // html/js
+                app.get('/show', fsmInstances.showFsmInstance);
+            });
         });
     });
     app.namespace('/user', function() {
@@ -79,10 +83,28 @@ app.all('*', function (req, res) {
 });
 
 
-  /////////////
- // Starter //
-/////////////
+// Debug
+var logRoutes = function(app) {
+    _.each(['get', 'post', 'put', 'delete'], function(method) {
+        _.each(app.routes[method], function (route) {
+            logger.debug(method.toUpperCase() + ' ' + route['path']);
+        });
+    });
+};
 
-app.listen(config.settings.PORT, function () {
-    logger.info("(started, listening on port " + config.settings.PORT + ")");
+
+
+  ///////////
+ // Start //
+///////////
+
+logger.warn('☁ ☁ ☁☼ ☼  STARTING APPLICATION! ⚡⚡⚡⚡⚡⚡ ');
+logger.debug('------------------------------------------------------');
+logger.debug("Listing routes...")
+logRoutes(app);
+db.connect();
+logger.debug('------------------------------------------------------');
+app.listen(config.settings.PORT, function() {
+    logger.info("Application started, listening on port " + config.settings.PORT);
 });
+
