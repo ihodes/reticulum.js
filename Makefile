@@ -1,5 +1,5 @@
 all:
-	foreman run supervisor app.js
+	foreman run supervisor index.js
 
 
 .PHONY: test
