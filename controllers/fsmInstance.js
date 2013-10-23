@@ -70,7 +70,7 @@ exports.sendEvent = function(req, res) {
     if(_.isObject(errors))
         return U.error(res, U.ERRORS.badRequest, {errors: errors});
 
-    fsmInstance.sendEvent(query, req.params.event, req.body.args,
+    fsmInstance.sendEvent(query, req.params.event, req.body.args, res,
                           U.sendBack(res, cleaner));
 };
 

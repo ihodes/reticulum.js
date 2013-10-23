@@ -66,7 +66,6 @@ app.namespace('/v1', function() {
             app.get('/:fsmInstanceId/show', fsmInstances.showFsmInstance); // html/js
         });
     });
-
     app.namespace('/user', function() {
         app.get('/:userId', user.getUser);
         app.post('/:userId/context', user.setContext);

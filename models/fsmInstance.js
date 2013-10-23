@@ -28,7 +28,7 @@ exports.getFsmInstance = function(query, params, callback) {
     return db.fsmInstance.findOne(query, callback);
 };
 
-exports.sendEvent = function(query, evt, params, callback) {
+exports.sendEvent = function(query, evt, params, res, callback) {
     db.fsmInstance.findOne(query)
       .populate('fsm')
       .exec(function(err, fsmInstance) {

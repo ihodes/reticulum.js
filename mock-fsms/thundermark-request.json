@@ -1,0 +1,54 @@
+{
+    "name": "Request",
+    "initialStateName": "Pending Response",
+    "states": [
+        {
+            "name": "Pending Response",
+            "actions": {
+                "event": [
+                    [["if", "eq", "acceptRequest"],
+                     ["text", ".customerCell", "Your request has been accepted!"],
+                     "In Progress"],
+                    [["if", "eq", "cancel"], "Cancelled"]
+                ],
+                "enter": [
+                    [["respond", "what=this", "is=sparta", "couriernumber=.courierCell"]]
+                ]
+
+            }
+        },
+        {
+            "name": "In Progress",
+            "actions": {
+                "event": [
+                    [["if", "eq", "decline"], "Pending Response"],
+                    [["if", "eq", "submit"],
+                     ["text", ".customerCell", "Your request has been submitted!"],
+                     "Pending Acceptance"],
+                    [["if", "eq", "cancel"], ["set", "cancelReason", "..reason"],
+                     ["text", ".courierCell", "The request has been cancelled"],
+                     "Cancelled"]
+                ]
+            }
+        },
+        {
+            "name": "Pending Acceptance",
+            "actions": {
+                "event": [
+                    [["if", "eq", "acceptSubmission"], ["set", "rating", "..rating"],
+                     ["text", ".courierCell", "Your submission has been accepted"],
+                     "Completed"],
+                    [["if", "eq", "rejectSubmission"], ["set", "rejectReason", "..reason"],
+                     ["text", ".courierCell", "Your submission has been rejected"],
+                     "In Progress"]
+                ]
+            }
+        },
+        {
+            "name": "Completed"
+        },
+        {
+            "name": "Cancelled"
+        }
+    ]
+}

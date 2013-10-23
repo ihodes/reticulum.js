@@ -23,12 +23,12 @@ exports.updateUser = function(user, userId, params, callback) {
 };
 
 exports.setContext = function(user, userId, context, callback) {
-    if (!user.superuser || (user.id !== userId)) return callback(null, null);
+    if (!user.superuser && (user.id !== userId)) return callback(null, null);
     db.user.findByIdAndUpdate(userId, {'$set': { context: context }}, callback);
 };
 
 exports.getUser = function(user, userId, callback) {
-    if (!user.superuser || (user.id !== userId)) return callback(null, null);
+    if (!user.superuser && (user.id !== userId)) return callback(null, null);
     db.user.findById(userId, callback);
 };
 
