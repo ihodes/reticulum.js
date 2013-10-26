@@ -8,8 +8,7 @@
                 "event": [
                     [["if", "eq", "acceptRequest"],
                      ["text", ".customerCell", "Your request has been accepted!"],
-                     "In Progress"],
-                    [["if", "eq", "cancel"], "Cancelled"]
+                     "In Progress"]
                 ],
                 "enter": [
                     [["respond", "what=this", "is=sparta", "couriernumber=.courierCell"]]
@@ -24,10 +23,7 @@
                     [["if", "eq", "decline"], "Pending Response"],
                     [["if", "eq", "submit"],
                      ["text", ".customerCell", "Your request has been submitted!"],
-                     "Pending Acceptance"],
-                    [["if", "eq", "cancel"], ["set", "cancelReason", "..reason"],
-                     ["text", ".courierCell", "The request has been cancelled"],
-                     "Cancelled"]
+                     "Pending Acceptance"]
                 ]
             }
         },
@@ -46,9 +42,6 @@
         },
         {
             "name": "Completed"
-        },
-        {
-            "name": "Cancelled"
         }
     ]
 }

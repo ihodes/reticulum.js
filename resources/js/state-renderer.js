@@ -8,13 +8,14 @@ var displayFsm = function (fsm, currentState) {
         .attr("height", diameter)
       .append("g")
         .attr("transform", "translate(0,0)");
-    
+
+    // Define the arrowhead.
     svg.append('svg:defs').append('svg:marker')
         .attr('id', 'end-arrow')
         .attr('viewBox', '0 -5 10 10')
-        .attr('refX', 6)
-        .attr('markerWidth', 6)
-        .attr('markerHeight', 6)
+        .attr('refX', 5)
+        .attr('markerWidth', 10)
+        .attr('markerHeight', 10)
         .attr('orient', 'auto')
       .append('svg:path')
         .attr('d', 'M0,-5L10,0L0,5')
@@ -24,14 +25,14 @@ var displayFsm = function (fsm, currentState) {
         .children(function (d) { return d.states; })
         .value(function(d){ return 1/(d.depth+1); })
         .size([diameter - 4, diameter - 4])
-        .padding(20);
+        .padding(50);
 
     var diagonal = d3.svg.diagonal.radial()
         .source(function(d) {
             var target = {x: Math.floor(d.target.x), y: Math.floor(d.target.y)};
             var z = {x: Math.floor(d.source.x), y: Math.floor(d.source.y)};
             var r = d.source.r;
-            var r45 = Math.sin(Math.PI/4)*r;
+            var r45 = Math.sin(Math.PI/4)*r + 2;
 
             if (z.x > target.x && z.y > target.y) {
                 z.x -= r45;
@@ -135,6 +136,8 @@ var displayFsm = function (fsm, currentState) {
         .text(function(d) { return JSON.stringify(d.actions); });
 
     node.filter(function(d) { return !d.children; }).append("text")
+        .style("font-size", "12px") // TK TODO should probably vary this depending on depth
+        .style("font-weight", "700")
         .attr("dy", ".3em")
         .style("text-anchor", "middle")
         .text(function(d) { return d.name.substring(0, d.r / 3); });
@@ -142,7 +145,7 @@ var displayFsm = function (fsm, currentState) {
     node.filter(function(d) { return d.children; }).append("text")
         .attr("dy", ".3em")
         .style("text-anchor", "middle")
-        .style("font-size", "14px") // TK TODO should probably vary this depending on depth
+        .style("font-size", "19px") // TK TODO should probably vary this depending on depth
         .style("font-weight", "700")
         .text(function(d) { return d.name; })
         .attr("transform", function(d) { return "translate(0," + (20-d.r) + ")"; });

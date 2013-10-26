@@ -1,8 +1,8 @@
 circle {
-  fill: #a1a1a1;
-  fill-opacity: .25;
-  stroke: #ccc;
-  stroke-width: 1px;
+    fill-opacity: .6;
+    fill: white;
+    stroke: #222;
+    stroke-width: 1px;
 }
 
 .leaf circle {
