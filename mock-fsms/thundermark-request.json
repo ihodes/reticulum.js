@@ -42,6 +42,13 @@
         },
         {
             "name": "Completed"
+        },
+        {
+            "name": "Cancelled",
+            "initialStateName": "Subcancel",
+            "states": [
+                { "name": "Subcancel" }
+            ]
         }
     ]
 }

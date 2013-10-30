@@ -45,24 +45,24 @@ app.namespace('/v1', function() {
         res.send({message: "You are connected to the API", status: 200});
     });
     app.namespace('/fsm', function() {
-        app.get('/', fsms.allFsms);
+        app.get('/',  fsms.allFsms);
         app.post('/', fsms.createFsm);
 
         // html/js
-        app.get('/all', fsms.listFsms);
+        app.get('/all',   fsms.listFsms);
+        app.get('/build', fsms.buildFsm);
 
         app.namespace('/:fsmId', function() {
-            app.get('/', fsms.getFsm);
-            app.put('/', fsms.updateFsm);
+            app.get('/',       fsms.getFsm);
+            app.put('/',       fsms.updateFsm);
+            app.post('/reify', fsmInstances.reifyFsm);
 
             // html/js
-            app.get('/show', fsms.showFsm);
-
+            app.get('/show',      fsms.showFsm);
             app.get('/instances', fsmInstances.getFsmInstances);
 
-            app.post('/reify', fsmInstances.reifyFsm);
             app.namespace('/:fsmInstanceId', function() {
-                app.get('/', fsmInstances.getFsmInstance);
+                app.get('/',             fsmInstances.getFsmInstance);
                 app.post('/send/:event', fsmInstances.sendEvent);
 
                 // html/js
@@ -71,7 +71,7 @@ app.namespace('/v1', function() {
         });
     });
     app.namespace('/user', function() {
-        app.get('/:userId', user.getUser);
+        app.get('/:userId',          user.getUser);
         app.post('/:userId/context', user.setContext);
     });
 });

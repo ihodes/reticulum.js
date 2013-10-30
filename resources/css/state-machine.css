@@ -1,25 +1,36 @@
+svg text {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -o-user-select: none;
+    user-select: none;
+}
+
 circle {
-    fill-opacity: .6;
-    fill: white;
+    fill-opacity: .4;
+    fill: #ccc;
     stroke: #222;
-    stroke-width: 1px;
+    stroke-width: .5px;
+}
+
+.root circle {
+    stroke-width: 0; 
+    fill-opacity: 0;
 }
 
 .leaf circle {
-  fill: #a9a9a9;
   fill-opacity: 1;
 }
 
 .initial circle {
-  fill: #909090;
-  fill-opacity: 1;
   stroke: #222;
-  stroke-width: 1px;
+  fill-opacity: .8;
+  stroke-width: 1.2px;
 }
 
 .current circle {
   fill: gold;
-  fill-opacity: .5;
+  fill-opacity: 1;
 }
 
 text {
@@ -30,4 +41,15 @@ text {
   fill: none;
   stroke: #545454;
   stroke-width: 1.5px;
+}
+
+
+/* moar nodez */
+.add circle {
+    fill: #222;
+    fill-opacity: 1;
+}
+
+.add text {
+    fill: #eaeaea;
 }

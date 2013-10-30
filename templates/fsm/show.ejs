@@ -10,9 +10,17 @@
     <style>
       body { font: 14px sans-serif; }
 
-      .boxd { padding: 11px; background: #f5f5f5; border: 1px solid #4d4d4d; }
+      .boxd { padding: 11px; border: 1px solid #4d4d4d; }
       
-      #diag { width: 100%; height: auto; padding: 0px; }
+     
+      ul { margin: 0 0 20px 0; padding: 0; }
+      li { display: inline; margin-right: 20px; }
+      li:hover { cursor: pointer; }
+      li.selected { font-weight: 700; }
+
+      #json { display: none; }
+     
+      #figure { width: 100%; height: auto; padding: 0px; }
       
       #poster { display: none; }
 
@@ -20,11 +28,37 @@
     </style>
   </head>
   <body>
+    <h2></h2>
+    <ul>
+      <li class="selected">Figure</li>
+      <li>JSON</li>
+    </ul>
+    <span id="current-state">&nbsp;</span>
+    <div id="figure" class="boxd">
+      <img src="/imgs/loader.gif" alt="loader" class="loading" style="padding: 20px;">
+    </div>
+    <pre id="json" class="boxd"><img src="/imgs/loader.gif" alt="loader"></pre>
+
+    <br/>
+    <hr/>
+    <div id="poster">
+      <h4>Poster</h4>
+      <div class="boxd">
+        <input id="event-name" type="text" placeholder="event name to post">
+        <input id="event-args" type="text" placeholder="args JSON to post">
+        <button id="send-event">Post</button>
+      </div>
+    </div>
+    <h4>Info</h4>
+    <pre id="info" class="boxd"><img src="/imgs/loader.gif" alt="loader" class="loading"></pre>
+    <br>
+
+
     <script>
     function capitalize(str) { return str.charAt(0).toUpperCase() + str.slice(1); }
 
     function prepareDisplay(fsmJson, currentState, globals, lastEvent) {
-      d3.select('#text')
+      d3.select('#json')
         .text(JSON.stringify(fsmJson.fsm, undefined, 2));
       d3.select('h2')
         .text(capitalize(fsmJson.name));
@@ -34,14 +68,15 @@
               JSON.stringify(globals || {}, undefined, 2)
               +" // "+
               JSON.stringify(lastEvent));
-      displayFsm(fsmJson.fsm, currentState);
+      window.fsm = fsmJson.fsm;
+      displayFsm('#figure', window.fsm, currentState);
     }
 
     function postEvent() {
       d3.select("#send-event").style("display", "none");
       var eventName = d3.select("#event-name").property("value");
       var eventArgs = d3.select("#event-args").property("value");
-      d3.xhr("send/"+eventName).post(eventArgs, function(){ location.reload(); })
+      d3.xhr("send/"+eventName).post(eventArgs, function(){ location.reload(); });
     }
 
     function attachPosterListener() {
@@ -71,25 +106,15 @@
         }
       }
     });
-    </script>
 
-    <h2></h2>
-    <h4>Diagram</h4>
-    <div id="diag" class="boxd">
-      <img src="/imgs/loader.gif" alt="loader" class="loading" style="padding: 20px;">
-    </div>
-    <div id="poster">
-      <h4>Poster</h4>
-      <div class="boxd">
-        <input id="event-name" type="text" placeholder="event name to post">
-        <input id="event-args" type="text" placeholder="args JSON to post">
-        <button id="send-event">Send</button>
-      </div>
-    </div>
-    <h4>Info</h4>
-    <pre id="info" class="boxd"><img src="/imgs/loader.gif" alt="loader" class="loading"></pre>
-    <br>
-    <h4>JSON representation</h4>
-    <pre id="text" class="boxd"><img src="/imgs/loader.gif" alt="loader"></pre>
+     d3.selectAll("li").on("click", function() {
+       var name = d3.select(this).text().toLowerCase();
+       var other = d3.select("li.selected");
+       other.classed("selected", false);
+       d3.select(this).classed("selected", true);
+       d3.select("#"+name).style("display", "block");
+       d3.select("#"+other.text().toLowerCase()).style("display", "none");
+     })
+    </script>
   </body>
 </html>

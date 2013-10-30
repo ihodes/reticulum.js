@@ -64,3 +64,9 @@ exports.listFsms = function(req, res) {
 exports.showFsm = function(req, res) {
     res.render('fsm/show.ejs', {id: req.params.fsmId, fsmInstanceId: ''});
 };
+
+
+// TK INSECURE not secure
+exports.buildFsm = function(req, res) {
+    res.render('fsm/build.ejs');
+};
