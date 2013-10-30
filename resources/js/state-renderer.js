@@ -6,42 +6,49 @@ var displayFsm = function(sel, fsm, currentStateName) {
 
     var svg = d3.select(sel).append("svg").attr("width", w).attr("height", h);
 
-    render(fsm, opts);
+    var stateFinder = _.partial(findStateIn, fsm);
 
-    var stateAdder = renderPalette(svg, {width: w, height: h});
-    stateAdder.call(stateAddDragHandler(fsm, opts));
+    setInterval(function(cache) {
+        return function() {
+            if (hashFsm(fsm) !== cache) {
+                render(fsm, opts);
+                renderPalette(stateFinder);
+                cache = hashFsm(fsm);
+            }
+        };
+    }(), 100)
 
     d3.select(".loading").style("display", "none");
 };
 
 
-function posToStates(pos, nodes) {
+function positionToStates(pos, nodes) {
     return states = nodes.filter(function(node) {
         var cpt = {x: node.x, y: node.y};
         var r = node.r;
         return withinCircle(cpt, r, { x: pos.x, y: pos.y });
-    })
+    });
 }
 
-function posToState(pos, nodes) {
-    var states = posToStates(pos, nodes)
+function positionToState(pos, nodes) {
+    var states = positionToStates(pos, nodes);
     var state = _.first(_.sortBy(states[0], function(n) { return -n.__data__.depth; }));
     return state;
 }
 
-function posToOtherStates(pos, nodes) {
+function positionToOtherStates(pos, nodes) {
     return states = nodes.filter(function(node) {
         var cpt = {x: node.x, y: node.y};
         var r = node.r;
         return !withinCircle(cpt, r, { x: pos.x, y: pos.y });
-    })
+    });
 }
     
 function nodeClass(currentState) {
     return function(d) { 
         var addl = "";
         if (d.depth === 0)
-            addl = "root"
+            addl = "root";
         else if (d.name === currentState)
             addl = "current";
         else if (d.parent.initialStateName === d.name)
@@ -53,9 +60,8 @@ function nodeClass(currentState) {
 }
 
 d3.selection.prototype.moveToFront = function() {
-  return this.each(function(){
-      if (this.parentNode)
-          this.parentNode.appendChild(this);
+  return this.each(function() {
+      if (this.parentNode)  this.parentNode.appendChild(this);
   });
 };
 
@@ -216,18 +222,35 @@ function findStateIn(root, name) {
     })(root);
 }
 
+function hashFsm(x) {
+    var cache = [];
+    return JSON.stringify(x, function(key, val) {
+        var ignoredKeys = ['x', 'y', 'r'];
+        if (_.contains(ignoredKeys, key)) return;
+        if (_.isObject(val) && val !== null) {
+            if (cache.indexOf(val) !== -1) return;
+            else cache.push(val);
+        }
+        return val;
+    });
+};
+
 
   //////////////////
  ///// Palette ////
 //////////////////
 
 
-function renderPalette(svg, dims) {
-    var width  = 150,
-        height = 200;
+function renderPalette(stateFinder) {
+    var svg    = d3.select("svg"),
+        width  = 150,
+        height = 200,
+        w      = Number(svg.attr("width"));
 
-    var palette = svg.append("g")
-        .attr("transform", "translate(" + (dims.width-width-10) +", 10)");
+    d3.select("#palette").remove();
+
+    var palette = d3.select("svg").append("g").attr("id", "palette")
+        .attr("transform", "translate(" + (w-width-10) +", 10)");
     
     palette.append("rect")
         .attr("width", width)
@@ -241,25 +264,29 @@ function renderPalette(svg, dims) {
         .attr("dy", "1.4em")
         .attr("dx", "1.1em");
 
-   var newState = palette.append("g")
+   var adder = palette.append("g")
         .attr("transform", "translate(" + width/2 + "," + height/2 + ")")
-        .attr("class", "add");
+        .attr("class", "add")
+        .call(adderDragHandler(stateFinder, {width: width, height: height}));
+    
+    adder.append("circle")
+        .attr("r", 0)
+        .transition()
+        .ease("elastic")
+        .attr("r", 50);
 
-    newState.append("circle")
-        .attr("r", "50")
-
-    newState.append("text")
+    adder.append("text")
         .text("Add A State")
         .style("font-size", "14px")
         .style("font-weight", "200")
         .attr("dy", ".3em")
         .style("text-anchor", "middle");
     
-    return newState;
+    return palette;
 }
 
 
-var stateAddDragHandler = function(fsm, opts) {
+var adderDragHandler = function(stateFinder, opts) {
     return d3.behavior.drag()
         .on("drag", function() {
             var nodes = d3.selectAll("g.node");
@@ -269,14 +296,14 @@ var stateAddDragHandler = function(fsm, opts) {
             
             var pos = currentPosition();
             
-            posToOtherStates(pos, nodes)
+            positionToOtherStates(pos, nodes)
                 .select("circle")
                 .transition()
                 .duration(400)
                 .attr("r", function(d, i) { return d.r; })
                 .ease("elastic");
             
-            posToStates(pos, nodes)
+            positionToStates(pos, nodes)
                 .select("circle")
                 .transition()
                 .duration(400)
@@ -285,40 +312,25 @@ var stateAddDragHandler = function(fsm, opts) {
         })
         .on("dragend", function() {
             var nodes = d3.selectAll("g.node");
-            var state = posToState(currentPosition(), nodes);
+            var state = positionToState(currentPosition(), nodes);
             var stateName = state ? state.__data__.name : "undefined";
 
             var adder = d3.select(this);
             
             if (stateName === "undefined") {
-                // TK TODO should do this right... 
                 adder.transition().ease("elastic")
-                    .attr("transform", "translate(75,100)");
+                    .attr("transform",
+                          "translate("+(opts.width/2)+","+(opts.height/2)+")");
             } else {
-                // TK TODO This should be better... need to encapsulate and re-render
-                adder.select("circle").attr("r", 0);
-                adder.select("text").style("fill-opacity", 0.00001);
-                adder.attr("transform", "translate(75,100)");
+                this.remove();
 
-                adder.select("circle")
-                    .transition()
-                    .ease("elastic")
-                    .duration(2000)
-                    .attr("r", 50);
-                adder.select("text")
-                    .transition()
-                    .duration(2000)
-                    .ease("elastic")
-                    .style("fill-opacity", 1);
-
-                var state = findStateIn(fsm, stateName);
-                var newStateName = "<NEW STATE "+String(Date.now())+">";
+                var state = stateFinder(stateName);
+                var newStateName = "<NEW STATE " + String(Date.now()) + ">";
                 if (!state.states) {
                     state.initialStateName = newStateName;
                     state.states = [];
                 }
                 state.states.push({ name: newStateName });
-                render(fsm, opts);
             }
             
             writeToInfoBar(stateName);
@@ -326,13 +338,3 @@ var stateAddDragHandler = function(fsm, opts) {
 };
 
 
-String.prototype.hashCode = function(){
-    var hash = 0, i, char;
-    if (this.length == 0) return hash;
-    for (i = 0, l = this.length; i < l; i++) {
-        char  = this.charCodeAt(i);
-        hash  = ((hash<<5)-hash)+char;
-        hash |= 0; // Convert to 32bit integer
-    }
-    return hash;
-};
