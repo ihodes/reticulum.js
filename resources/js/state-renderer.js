@@ -84,7 +84,14 @@ function position(nodes) {
 
 function render(fsm, opts) {
     var diameter         = opts.diameter,
-        currentStateName = opts.currentStateName;
+        currentStateName = opts.currentStateName,
+        svg              = d3.select("svg");
+
+    svg.on("mousedown", function() {
+        var toElementName = d3.event.toElement.tagName.toLowerCase();
+        if (toElementName !== 'text' && toElementName !== 'input')
+            d3.selectAll("input").remove();
+    })
 
     var pack = d3.layout.pack()
         .children(function (d) { return d.states; })
@@ -94,22 +101,24 @@ function render(fsm, opts) {
 
     var data = pack.nodes(fsm);
 
+
     window.fsm = fsm;
     window.data = data;
 
-    var node = d3.select("svg").selectAll(".node")
+
+    var node = svg.selectAll(".node")
         .data(data, getter('name'));
 
     var nodes = node.enter().append("g")
         .attr("class", "node") // Necessary for the `node` selector to work.
         .attr("transform", function(d) {
             return "translate(" + d.x + "," + d.y + ")";
-        });
+        })
     nodes.append("circle").attr("r", function(d) { return 0; });
     nodes.append("text");
 
     node.attr("class", nodeClass(currentStateName))
-        .call(dragHandler())
+        .call(dragHandler(fsm))
         .transition()
         .attr("transform", function(d) {
             return "translate(" + d.x + "," + d.y + ")";
@@ -128,18 +137,65 @@ function render(fsm, opts) {
         .attr("dy", ".3em")
         .attr("transform", function(d) {
             if (d.children) return "translate(0," + (20 - d.r) + ")";
-        });
+        })
+        .on("click", textEditHandle);
     
 
-    node.exit().remove();
+    // Doesn't quite work... TK TODO (This opens up the name editing input when
+    // a new state is added to the diagram.)
+    // node.filter(function(d) {
+    //     return d.name === '_';
+    // }).call(function(node) {
+    //     if (node.node()) {
+    //         var d = node.node().__data__;
+    //         _.bind(textEditHandle, node.node())(d);
+    //     }
+    // });
 
+
+    node.exit().remove();
 }
 
-function dragHandler() {
+
+function textEditHandle(d) {
+    var height = 26;
+    var width  = d.r * 2;
+    var text = d3.select(this);
+    var g = d3.select(this.parentNode);
+    g.append("foreignObject")
+        .attr("width", width)
+        .attr("height", height)
+      .append("xhtml:body")
+        .style("position", "relative")
+        .attr("xmlns", "http://www.w3.org/1999/xhtml")
+      .append("input")
+        .style("position", "absolute")
+        .style("left", d.x-width/2+"px")
+        .style("top", d.y-height/2+"px")
+        .attr("placeholder", "Enter a Name")
+        .style("font-size", (2/(d.depth+1))+"em")
+        .call(function(node) { node.node().focus(); })
+        .on("keydown", function() {
+            if (d3.event.keyCode === 13) {
+                if (d.parent && d.parent.initialStateName == d.name)
+                    d.parent.initialStateName = this.value;
+                d.name = this.value;
+                text.text(this.value);
+                this.remove();
+            } else if (d3.event.keyCode === 27) {
+                this.remove();
+            }
+        });
+}
+
+
+function dragHandler(fsm) {
     var nodes = d3.selectAll(".node");
     var DRAG = {
         start: function(d, i) {
-            if(d3.select(this)[0][0].__data__.depth == 0) return;
+            var clickedElName = d3.event.sourceEvent.target.tagName.toLowerCase();
+            if (clickedElName === 'input' || clickedElName === 'body') return;
+            if (d.depth == 0) return;
 
             d3.select(this).select("circle")
                 .transition()
@@ -156,7 +212,10 @@ function dragHandler() {
         },
 
         move: function(d, i) {
-            if(d3.select(this)[0][0].__data__.depth == 0) return;
+            var clickedElName = d3.event.sourceEvent.target.tagName.toLowerCase();
+            if (clickedElName === 'input' || clickedElName === 'body') return;
+            if (d.depth == 0) return;
+
 
             d.x += d3.event.dx;
             d.y += d3.event.dy;
@@ -164,26 +223,55 @@ function dragHandler() {
             _.each(allChildren(d), function(child) {
                 child.x += d3.event.dx;
                 child.y += d3.event.dy;
-                });
+            });
+
+            var otherNodes = d3.selectAll("g.node").filter(function(node) {
+                return node.name !== d.name;
+            });
+            var underState = positionToState({x: d.x, y: d.y}, otherNodes);
+            if (!underState) { // then we're going to be deleting this if we drop it...
+                d3.select(this).select("circle")
+                    .style("fill", "#982323");
+            } else {
+                d3.select(this).select("circle")
+                    .style("fill", null);
+            }
 
             position(nodes);
         },
 
         end: function(d, i) {
-            if(d3.select(this)[0][0].__data__.depth == 0) return;
+            var clickedElName = d3.event.sourceEvent.target.tagName.toLowerCase();
+            if (clickedElName === 'input' || clickedElName === 'body') return;
+            if (d.depth == 0) return;
+
+            var thisName  = d.name;
+            var thisState = findStateIn(fsm, thisName);
+
+            var otherNodes = d3.selectAll("g.node").filter(function(node) {
+                return node.name !== thisName;
+            });
+
+            var state = positionToState({x: d.x, y: d.y}, otherNodes);
+            var stateName = state ? state.__data__.name : undefined;
+
+
+            if (stateName === undefined)
+                removeState(fsm, thisState);
+                
 
             d3.select(this).select("circle")
                     .transition().duration(300)
                 .attr("r", function(d) { return d.r; })
                 .ease("elastic");
             
-                _.each(allChildren(d), function(child, idx) {
-                    nodes.filter(function(d, i) { return d.name == child.name; })
-                        .select("circle")
-                        .transition()
-                        .attr("r", function(d) { return d.r; })
-                        .ease("elastic");
-                });
+            _.each(allChildren(d), function(child, idx) {
+                nodes.filter(function(d, i) { return d.name == child.name; })
+                    .select("circle")
+                    .transition()
+                    .attr("r", function(d) { return d.r; })
+                    .ease("elastic");
+            });
             
             position(nodes);
         }
@@ -193,6 +281,38 @@ function dragHandler() {
         .on("drag", DRAG.move)
         .on("dragend", DRAG.end);
     return drag;
+}
+
+function findStateIn(root, name) {
+    return (function finder(currentNode) {
+        if (currentNode.name == name) return currentNode;
+        else return _.first(_.compact(_.map(currentNode.states, finder)));
+    })(root);
+}
+
+function removeState(fsm, state) {
+    function _removeState(state, root) {
+        if (root.states) {
+            var index = root.states.indexOf(state);
+            if (index !== -1)
+                root.states.splice(index, 1);
+            else
+                _.each(root.states, _.partial(_removeState, state));
+        }
+    }
+    _removeState(state, fsm);
+}
+
+function insertStateInto(fsm, state, thisState) {
+    // Inserts thisState into state's states
+    // and removes it from wherever it was before.
+    removeState(fsm, thisState);
+    if (state.states) {
+        state.states.push(thisState);
+    } else {
+        state.initialStateName = thisState.name;
+        state.states = [thisState];
+    }
 }
 
 function writeToInfoBar(text) {
@@ -214,13 +334,6 @@ function withinCircle(cpt, r, pt) {
 }
 
 function getter(key) { return function (d) { return d[key]; } };
-
-function findStateIn(root, name) {
-    return (function finder(currentNode) {
-        if (currentNode.name == name) return currentNode;
-        else return _.first(_.compact(_.map(currentNode.states, finder)));
-    })(root);
-}
 
 function hashFsm(x) {
     var cache = [];
@@ -325,7 +438,8 @@ var adderDragHandler = function(stateFinder, opts) {
                 this.remove();
 
                 var state = stateFinder(stateName);
-                var newStateName = "<NEW STATE " + String(Date.now()) + ">";
+                // var newStateName = "<NEW STATE " + String(Date.now()) + ">";
+                var newStateName = "______";
                 if (!state.states) {
                     state.initialStateName = newStateName;
                     state.states = [];
@@ -336,5 +450,4 @@ var adderDragHandler = function(stateFinder, opts) {
             writeToInfoBar(stateName);
         });
 };
-
 

@@ -14,7 +14,8 @@ circle {
 }
 
 .root circle {
-    stroke-width: 0; 
+    stroke-width: .5px; 
+    stroke: #a2a2a2;
     fill-opacity: 0;
 }
 
