@@ -25,10 +25,23 @@
       #poster { display: none; }
 
       pre { font-family: "Anonymous Pro"; font-size: 12px; }
+     
+      .msg    { border-radius: 5px; padding: 7px; font-weight: 700; color: #222; 
+                text-align: center; } 
+      .error  { background: #ff5452; }
+      .alert  { background: #feff7b; }
+      .notice { background: #97c3ff; }
+     
+      .error, .alert, .notice { display: none; }
     </style>
   </head>
   <body>
     <h2></h2>
+    <div id="messages">
+      <div class="msg error">Error</div>
+      <div class="msg alert">Alert</div>
+      <div class="msg notice">Notice</div>
+    </div>
     <ul>
       <li class="selected">Figure</li>
       <li>JSON</li>

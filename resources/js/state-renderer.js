@@ -23,23 +23,23 @@ var displayFsm = function(sel, fsm, currentStateName) {
 
 
 function positionToStates(pos, nodes) {
-    return states = nodes.filter(function(node) {
-        var cpt = {x: node.x, y: node.y};
-        var r = node.r;
+    return states = nodes.filter(function(d) {
+        var cpt = {x: d.x, y: d.y};
+        var r = d.r;
         return withinCircle(cpt, r, { x: pos.x, y: pos.y });
     });
 }
 
 function positionToState(pos, nodes) {
     var states = positionToStates(pos, nodes);
-    var state = _.first(_.sortBy(states[0], function(n) { return -n.__data__.depth; }));
+    var state = _.first(_.sortBy(states[0], function(n) {return -n.__data__.depth;}));
     return state;
 }
 
 function positionToOtherStates(pos, nodes) {
-    return states = nodes.filter(function(node) {
-        var cpt = {x: node.x, y: node.y};
-        var r = node.r;
+    return states = nodes.filter(function(d) {
+        var cpt = {x: d.x, y: d.y};
+        var r = d.r;
         return !withinCircle(cpt, r, { x: pos.x, y: pos.y });
     });
 }
@@ -65,7 +65,6 @@ d3.selection.prototype.moveToFront = function() {
   });
 };
 
-
 function allChildren(node) {
     if (node.children)
         return _.reduce(node.children,
@@ -74,13 +73,11 @@ function allChildren(node) {
     else return [];
 }
 
-
 function position(nodes) {
     nodes.attr("transform", function(d) {
         return "translate(" + d.x + "," + d.y + ")";
     });
 }
-
 
 function render(fsm, opts) {
     var diameter         = opts.diameter,
@@ -107,7 +104,7 @@ function render(fsm, opts) {
 
 
     var node = svg.selectAll(".node")
-        .data(data, getter('name'));
+        .data(data, getter("name"));
 
     var nodes = node.enter().append("g")
         .attr("class", "node") // Necessary for the `node` selector to work.
@@ -140,22 +137,18 @@ function render(fsm, opts) {
         })
         .on("click", textEditHandle);
     
-
-    // Doesn't quite work... TK TODO (This opens up the name editing input when
-    // a new state is added to the diagram.)
-    // node.filter(function(d) {
-    //     return d.name === '_';
-    // }).call(function(node) {
-    //     if (node.node()) {
-    //         var d = node.node().__data__;
-    //         _.bind(textEditHandle, node.node())(d);
-    //     }
-    // });
-
+    // Opens up the name editing input when a new state is added to the diagram
+    node.filter(function(d) {
+        return d.name === '';
+    }).call(function(node) {
+        if (node.node()) {
+            var d = node.node().__data__;
+            _.bind(textEditHandle, node.select("text").node())(d);
+        }
+    });
 
     node.exit().remove();
 }
-
 
 function textEditHandle(d) {
     var height = 26;
@@ -167,22 +160,35 @@ function textEditHandle(d) {
         .attr("height", height)
       .append("xhtml:body")
         .style("position", "relative")
-        .attr("xmlns", "http://www.w3.org/1999/xhtml")
       .append("input")
         .style("position", "absolute")
         .style("left", d.x-width/2+"px")
         .style("top", d.y-height/2+"px")
-        .attr("placeholder", "Enter a Name")
         .style("font-size", (2/(d.depth+1))+"em")
+        .attr("value", d.name)
+        .attr("placeholder", "Enter a Name...")
         .call(function(node) { node.node().focus(); })
         .on("keydown", function() {
-            if (d3.event.keyCode === 13) {
+            if (d3.event.keyCode === 13) { // enter
+                if (this.value.length === 0) {
+                    message('error', 'New State Requires a Name');
+                    return;
+                }
                 if (d.parent && d.parent.initialStateName == d.name)
                     d.parent.initialStateName = this.value;
+
+                if (_.contains(_.pluck(window.data, 'name'), this.value)) {
+                    message('error', 'States must have unique names');
+                    return;
+                }
                 d.name = this.value;
                 text.text(this.value);
                 this.remove();
-            } else if (d3.event.keyCode === 27) {
+            } else if (d3.event.keyCode === 27) { // esc
+                if (this.value.length === 0 && text.text().length === 0) {
+                    message('error', 'New State Requires a Name');
+                    return;
+                }
                 this.remove();
             }
         });
@@ -315,9 +321,6 @@ function insertStateInto(fsm, state, thisState) {
     }
 }
 
-function writeToInfoBar(text) {
-    d3.select("#current-state").text(text)
-}
 
 function currentPosition() {
     return {x: d3.event.sourceEvent.offsetX, y: d3.event.sourceEvent.offsetY};
@@ -438,16 +441,31 @@ var adderDragHandler = function(stateFinder, opts) {
                 this.remove();
 
                 var state = stateFinder(stateName);
-                // var newStateName = "<NEW STATE " + String(Date.now()) + ">";
-                var newStateName = "______";
+                var newStateName = "";
                 if (!state.states) {
                     state.initialStateName = newStateName;
                     state.states = [];
                 }
                 state.states.push({ name: newStateName });
+                
             }
-            
-            writeToInfoBar(stateName);
         });
 };
 
+function message(type, text) {
+    if (text === undefined)
+        text = type, type = 'notice';
+    if (! _.contains(['error', 'alert', 'notice'], type))
+        throw new Error("Message not of recognized type. Must be one of error, alert, notice.")
+    d3.select("#messages")
+      .append("div")
+        .attr("class", "msg " + type)
+        .text(text)
+        .style('display', 'block')
+        .call(function() {
+            var el = this;
+            setTimeout(function () {
+                el.remove(); 
+            }, 1500);
+        });
+}
