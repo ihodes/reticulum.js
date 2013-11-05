@@ -20,7 +20,7 @@ circle {
 }
 
 .leaf circle {
-  fill-opacity: 1;
+  fill-opacity: .9;
 }
 
 .initial circle {
@@ -38,14 +38,14 @@ text {
   font: 10px sans-serif;
 }
 
-.transition {
+.link {
   fill: none;
   stroke: #545454;
   stroke-width: 1.5px;
 }
 
 
-/* moar nodez */
+/* Palette */
 .add circle {
     fill: #222;
     fill-opacity: 1;
