@@ -14,8 +14,7 @@ circle {
 }
 
 .root circle {
-    stroke-width: .5px; 
-    stroke: #a2a2a2;
+    stroke: none;
     fill-opacity: 0;
 }
 
@@ -32,6 +31,10 @@ circle {
 .current circle {
   fill: gold;
   fill-opacity: 1;
+}
+
+.selected circle {
+    fill: turquoise;
 }
 
 text {

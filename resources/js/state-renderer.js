@@ -168,6 +168,10 @@ function render(fsm, opts) {
 
 
     var data     = pack.nodes(fsm);
+    _.each(data, function(node) {
+        if (node.parent && node.parent.children.length == 1)
+            node.r *= 0.5;
+    });
     var linkData = generateLinks(data);
 
 
