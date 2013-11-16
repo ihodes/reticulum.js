@@ -2,132 +2,124 @@
 <html>
   <head>
     <title>retic://<%= id %></title>
+
+    <script type="text/javascript" src="//use.typekit.net/tpa5tbn.js"></script>
+    <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
     <script src="/js/d3.v3.min.js"></script>
     <script src="/js/underscore-min.js"></script>
     <script src="/js/state-renderer.js"></script>
     <link rel="stylesheet" href="/css/state-machine.css">
 
     <style>
-      body { font: 14px sans-serif; }
+     body     { margin: 0; font-family: "proxima-nova";}
+     svg      { margin: 0; padding: 0; }
+     #HUD     { position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                margin: 0; padding: 0; border: 3px solid #a9a9a9; }
+     .section { padding: 0; margin: 0; }
+     #display { position: fixed; top: 0; bottom: 0; left: 0; right: 33.33%; 
+                border-right: 3px solid #a9a9a9;}
+     #control { position: fixed; top: 0; bottom: 0; left: 66.66%; right: 0;
+                padding: 10px; overflow: auto; }
 
-      .boxd { padding: 11px; border: 1px solid #4d4d4d; }
-      
-     
-      ul { margin: 0 0 20px 0; padding: 0; }
-      li { display: inline; margin-right: 20px; }
-      li:hover { cursor: pointer; }
-      li.selected { font-weight: 700; }
+     input, select           { width: 90%; font-weight: 900; padding: 10px;  }
+     input#state-name        { font-size: 2em; background: #fdfdfd; }
+     .initial-state-name div { display: inline-block; padding-left: 5px; width: 100px; 
+                               font-weight: 500; }
+     #initial-state-name     { font-size: .75em; width: 60%;  }
 
-      #json { display: none; }
-     
-      #figure { width: 100%; height: auto; padding: 0px; }
-      
-      #poster { display: none; }
+     /* Styling for select box */
+     select { padding: 11px 15px; margin: 11px 0; background: #fdfdfd; color: #555; border-bottom: 1px dashed #333; border-right: 1px dashed #777; border-left: 1px dashed #777; border-top: 1px dashed #bbb; outline: none; display: inline-block; -webkit-appearance: none; -moz-appearance: none; appearance: none; cursor: pointer; }
+     label { position:relative; }
+     label:after { content:'<>'; font:17px "Anonymous Pro", monospace; color:#222; -webkit-transform:rotate(90deg); -moz-transform:rotate(90deg); -ms-transform:rotate(90deg); transform:rotate(90deg); right:8px; top:2px; padding:0 0 2px; border-bottom:1px solid #999; position:absolute; pointer-events:none;}
+     label:before { content:''; right:6px; top:0px; width:20px; height:20px; background:#fdfdfd; position:absolute; pointer-events:none; display:block; }
+     /* end styling for select box */
 
-      pre { font-family: "Anonymous Pro"; font-size: 12px; }
-     
-      .msg    { border-radius: 5px; padding: 7px; font-weight: 700; color: #222; 
-                text-align: center; } 
-      .error  { background: #ff5452; }
-      .alert  { background: #feff7b; }
-      .notice { background: #97c3ff; }
-     
-      .error, .alert, .notice { display: none; }
+     a        { text-decoration: none; border: 1px dashed #666;
+                border-radius: 7px; padding: 5px; color: #222; width: 155px;
+                text-align: center; display: inline-block; }
+     a:hover  { background: #e9e9e9;  #222; }
+     a:active { background: #c9c9c9; color: #222;}
+
+     #state-controls { margin:7px 0; }
+     #state-controls a { width: 120px; }
+
+     span#save-indicator { margin-left: 11px; font-weight: 100; }
+
+     ul { overflow: auto; border-bottom: 1px dashed #666; border-top: 1px dashed #666;
+          width: auto;  max-height: 250px; padding: 0; background: #fdfdfd; }
+     li { border-left: 3px solid #666; padding-left:13px; position: relative; }
+     li textarea { min-height: 120px; width: 90%; border: none; background: #fdfdfd; }
+     li textarea:focus { border: none; outline: none; background: #f1f1f1;}
+
+     pre { font-family: "anonymous-pro"; }
+
+     .remove-action-button { 
+       position: absolute; top: 0px; right: 4px;
+       width: 25px; height: 25px;
+       border: none;
+       border-radius: 25px;
+       background-color: #f9a1a1;
+       text-decoration:none;
+       font-weight: 700;
+     }
+     .remove-action-button:hover { background-color: #f98181; }
+     .remove-action-button:active { background-color: #e95656; outline: none; }
+     /* .remove-action-button:focus { outline: none; border: 2px dashed #222; } */
     </style>
   </head>
   <body>
-    <h2></h2>
-    <div id="messages">
-      <div class="msg error">Error</div>
-      <div class="msg alert">Alert</div>
-      <div class="msg notice">Notice</div>
-    </div>
-    <ul>
-      <li class="selected">Figure</li>
-      <li>JSON</li>
-    </ul>
-    <span id="current-state">&nbsp;</span>
-    <div id="figure" class="boxd">
-      <img src="/imgs/loader.gif" alt="loader" class="loading" style="padding: 20px;">
-    </div>
-    <pre id="json" class="boxd"><img src="/imgs/loader.gif" alt="loader"></pre>
+    <div id="HUD">
+      <div id="display" class="section">
+        <img src="/imgs/loader.gif" alt="loader" class="loading">
+      </div>
 
-    <br/>
-    <hr/>
-    <div id="poster">
-      <h4>Poster</h4>
-      <div class="boxd">
-        <input id="event-name" type="text" placeholder="event name to post">
-        <input id="event-args" type="text" placeholder="args JSON to post">
-        <button id="send-event">Post</button>
+      <div id="control" class="section">
+        <input id="state-name" value="..." type="text"
+               placeholder="Enter name..." />
+        <br />
+        <div class="initial-state-name">
+          <div>Initial State:</div>
+          <label>
+            <select id="initial-state-name">
+            </select>
+          </label>
+        </div>
+
+        
+        <div id="state-controls">
+          <a id="add-state" href="#">&#43; Add a substate</a>
+          <a id="remove-state" href="#">&#8722; Remove state</a>
+          <span id="save-indicator" style="white-space: nowrap;">Saved 6 minutes ago.</span>
+        </div>
+        <div id="event-panel">
+          <h3>Event Actions</h3>
+          <a id="add-event-action" href="#">&#43; Add an event action</a>
+          <ul id="event">
+          </ul>
+          <h3>Enter Actions</h3>
+          <a id="add-enter-action" href="#">&#43; Add an enter action</a>
+          <ul id="enter">
+          </ul>
+          <h3>Exit Actions</h3>
+          <a id="add-exit-action" href="#">+ Add an exit action</a>
+          <ul id="exit">
+          </ul>
+        </div>
       </div>
     </div>
-    <h4>Info</h4>
-    <pre id="info" class="boxd"><img src="/imgs/loader.gif" alt="loader" class="loading"></pre>
-    <br>
-
 
     <script>
-    function capitalize(str) { return str.charAt(0).toUpperCase() + str.slice(1); }
-
-    function prepareDisplay(fsmJson, currentState, globals, lastEvent) {
-      d3.select('#json')
-        .text(JSON.stringify(fsmJson.fsm, undefined, 2));
-      d3.select('h2')
-        .text(capitalize(fsmJson.name));
-      d3.select('#info')
-        .text(JSON.stringify(fsmJson, ['name','initialStateName','group'], 2)
-              +" // "+
-              JSON.stringify(globals || {}, undefined, 2)
-              +" // "+
-              JSON.stringify(lastEvent));
-      window.fsm = fsmJson.fsm;
-      displayFsm('#figure', window.fsm, currentState);
-    }
-
-    function postEvent() {
-      d3.select("#send-event").style("display", "none");
-      var eventName = d3.select("#event-name").property("value");
-      var eventArgs = d3.select("#event-args").property("value");
-      d3.xhr("send/"+eventName).post(eventArgs, function(){ location.reload(); });
-    }
-
-    function attachPosterListener() {
-      d3.select("#send-event").on("click", function() {
-        postEvent();
-      });
-      d3.select("#poster input").on("keypress", function() {
-        if (d3.event.keyCode === 13) postEvent();
-      });
-    }
-
-    d3.json("/v1/fsm/<%= id %>", function(error, fsmJson) {
-      if (error) {
-        d3.select('pre').text("404 NOT FOUND");
-        return console.warn(error);
-      } else {
-        window.fsm = fsmJson;
-        if(!_.isEmpty("<%= fsmInstanceId %>")) {
-          d3.json("/v1/fsm/<%= id %>/<%= fsmInstanceId %>", function(error, fsmInstanceJson) {
-            prepareDisplay(fsmJson, fsmInstanceJson.currentStateName,
-                                    fsmInstanceJson.locals, fsmInstanceJson.lastEvent);
-            d3.select("#poster").style("display", "block");
-            attachPosterListener();
-          });
-        } else {
-            prepareDisplay(fsmJson);
-        }
-      }
-    });
-
-     d3.selectAll("li").on("click", function() {
-       var name = d3.select(this).text().toLowerCase();
-       var other = d3.select("li.selected");
-       other.classed("selected", false);
-       d3.select(this).classed("selected", true);
-       d3.select("#"+name).style("display", "block");
-       d3.select("#"+other.text().toLowerCase()).style("display", "none");
-     })
+     function prepareDisplay(fsmJson) {
+       var currentState = null; // TK TODO
+       displayFsm('#display', fsmJson.fsm, currentState, function() {
+         d3.select('#display .loading').remove();
+       });
+     }
+     
+     d3.json("/v1/fsm/<%= id %>", function(error, fsmJson) {
+       if (error) return console.warn(error);
+       else prepareDisplay(fsmJson);
+     });
     </script>
   </body>
 </html>

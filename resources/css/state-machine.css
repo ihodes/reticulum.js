@@ -13,7 +13,8 @@ circle {
     stroke-width: .5px;
 }
 
-.root circle {
+rect { fill-opacity: 0; }
+.root rect {
     stroke: none;
     fill-opacity: 0;
 }
@@ -43,17 +44,17 @@ text {
 
 .link {
   fill: none;
-  stroke: #545454;
+  stroke: #909090;
   stroke-width: 1.5px;
 }
 
 
-/* Palette */
-.add circle {
-    fill: #222;
-    fill-opacity: 1;
+::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 7px;
 }
-
-.add text {
-    fill: #eaeaea;
+::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background-color: rgba(0,0,0,.5);
+    -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
 }
