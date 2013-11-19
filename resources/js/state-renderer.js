@@ -10,6 +10,7 @@ var displayFsm = function(sel, fsm, currentStateName, next) {
     setRef("selectedState", fsm);
 
     watch("fsm", function(n, o) {
+        d3.select("#save-fsm").text("Save FSM").classed("dark", false);
         renderFSM(n, opts);
     }, {freeze: hashFsm});
     watch("selectedState", function(n, o) {
@@ -17,17 +18,15 @@ var displayFsm = function(sel, fsm, currentStateName, next) {
     }, {freeze: hashFsm});
 
     d3.select("#save-fsm").on("click", function(){
-        d3.select("#save-fsm").text("Saving...");
-        d3.select("#save-fsm").style("background-color","#efefef");
-        d3.select("#save-fsm").style("cursor","default");
+        d3.select("#save-fsm").text("Saving...").classed("dark", true);
         d3.xhr("/v1/fsm/"+window.location.pathname.split('/')[3])
             .header("Content-type", "application/json")
             .send('PUT',  '{"fsm":'+hashFsm(window.fsm)+'}', function(err, resp){
-                console.log("ERROR: ", err);
+                console.log("ERROR:    ", err);
                 console.log("RESPONSE: ", resp);
-                d3.select("#save-fsm").text("Save FSM");
-                d3.select("#save-fsm").style("background-color","white");
-                d3.select("#save-fsm").style("cursor","pointer");
+                d3.select("#save-fsm")
+                    .text("Saved FSM")
+                    .classed("dark", true);
             })
     })
 
@@ -304,14 +303,13 @@ function selectState(state) {
     // Initialize and change state name
     //
     d3.select("input#state-name").node().value = state.name || "";
-    
-    d3.select("#state-name").on("keyup", function() {
+    d3.select("#state-name").on("keyup", _.debounce(function() {
         var statename = d3.select("#state-name").node().value;
         var oldname = state.name;
         state.name = statename;
         if (state.parent && state.parent.initialStateName === oldname)
             state.parent.initialStateName = statename;
-    });    
+    }, 300));
 
     //
     // Set up initial state changer etc
@@ -344,20 +342,24 @@ function selectState(state) {
         actions.enter()
             .append("li").append("pre").append("textarea")
             .html(function(d) { return JSON.stringify(d, undefined, 2); })
-            .on("change", function(d, i) {
-                console.log("HURR ");
+            .on("keyup", function(d, i) {
                 try {
-                    // NB this is nasty mutation. TK HACK MUTATION FML JAVASCRIPT WHY.
-                    var state = deref("selectedState");
-                    state.actions[actionType].splice(i, 1, JSON.parse(this.value));
-
+                    JSON.parse(this.value);
                     d3.select(this).style("border", "none");
                 } catch (e) {
                     d3.select(this).style("border", "1px dashed red");
                 }
+            })
+            .on("change", function(d, i) {
+                try {
+                    // TK DRY (c.f. C-s DRY)
+                    // NB this is nasty mutation. TK HACK MUTATION FML JAVASCRIPT WHY.
+                    var state = deref("selectedState");
+                    state.actions[actionType].splice(i, 1, JSON.parse(this.value));
+                } catch (e) { }
             });
         actions.append("button").attr("class", "remove-action-button")
-            .text("X").on("click", function(d, i){
+            .text("X").on("click", function(d, i) {
                 this.parentElement.remove();
                 var state = deref("selectedState");
                 state.actions[actionType].splice(i, 1);
@@ -375,9 +377,6 @@ function selectState(state) {
         addAction("exit");
     });
 
-    // ^ need to add these new actions (and edited old actions) to the FSM
-    // TK TODO START HERE ^^^^^ 
-
     //
     // Adding and removing states
     //
@@ -393,7 +392,7 @@ function selectState(state) {
             removeState(deref("fsm"), state);
             setRef("selectedState", nextState);
         } else {
-            // No op -- Can't remove the root node (display msg to user here TK TODO)
+            noty({text: "You cannot remove the root node."});
         }
     });
 }
@@ -428,17 +427,20 @@ function addAction(actionType, actionArray) {
 
     actions.append("pre").append("textarea")
         .attr("placeholder", "Enter action text here...")
-        .on("change", function(d, i) {
-            console.log("CHANGED");
-            try { // COPIED FROM selectState(...) TK DRY
-                // NB this is nasty mutation. TK HACK MUTATION FML JAVASCRIPT WHY.
-                var state = deref("selectedState");
-                state.actions[actionType].splice(i, 1, JSON.parse(this.value));
-                
+        .on("keyup", function(d, i) {
+            try {
+                JSON.parse(this.value);
                 d3.select(this).style("border", "none");
             } catch (e) {
                 d3.select(this).style("border", "1px dashed red");
             }
+        })
+        .on("change", function(d, i) {
+            try { // COPIED FROM selectState(...) TK DRY
+                // NB this is nasty mutation. TK HACK MUTATION FML JAVASCRIPT WHY.
+                var state = deref("selectedState");
+                state.actions[actionType].splice(i, 1, JSON.parse(this.value));
+            } catch (e) { }
         });
     actions.append("button").attr("class", "remove-action-button")
         .text("X").on("click", function(){
