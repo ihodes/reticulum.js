@@ -6,6 +6,10 @@ svg text {
     user-select: none;
 }
 
+.selected circle {
+    fill: turquoise;
+}
+
 circle {
     fill-opacity: .4;
     fill: #ccc;
@@ -32,10 +36,6 @@ rect { fill-opacity: 0; }
 .current circle {
   fill: gold;
   fill-opacity: 1;
-}
-
-.selected circle {
-    fill: turquoise;
 }
 
 text {

@@ -5,6 +5,7 @@ var displayFsm = function(sel, fsm, currentStateName, next) {
                  currentStateName: currentStateName,
                  w: w, h: h };
 
+    window.opts = opts;
     window.fsm = fsm;
     setRef("fsm", fsm);
     setRef("selectedState", fsm);
@@ -22,8 +23,11 @@ var displayFsm = function(sel, fsm, currentStateName, next) {
         d3.xhr("/v1/fsm/"+window.location.pathname.split('/')[3])
             .header("Content-type", "application/json")
             .send('PUT',  '{"fsm":'+hashFsm(window.fsm)+'}', function(err, resp){
-                console.log("ERROR:    ", err);
-                console.log("RESPONSE: ", resp);
+                if (err) {
+                    noty({text:JSON.stringify(err), timeout: false, type: 'error'});
+                }
+                console.log("ERROR:    ", window.err = err);
+                console.log("RESPONSE: ", window.resp = resp);
                 d3.select("#save-fsm")
                     .text("Saved FSM")
                     .classed("dark", true);
@@ -36,6 +40,11 @@ var displayFsm = function(sel, fsm, currentStateName, next) {
 
     next();
 };
+
+function resetCurrentStateName(currentStateName) {
+    var classer = nodeClass(currentStateName);
+    var nodes = d3.selectAll(".node").attr("class", classer);
+}
 
 function renderFSM(fsm, opts) {
     var diameter         = opts.diameter,
@@ -124,12 +133,12 @@ function renderFSM(fsm, opts) {
 }
 
 
-function nodeClass(currentState) {
+function nodeClass(currentStateName) {
     return function(d) { 
         var addl = "";
         if (d.depth === 0)
             addl = "root";
-        else if (d.name === currentState)
+        else if (d.name === currentStateName)
             addl = "current";
         else if (d.parent.initialStateName === d.name)
             addl = "initial";

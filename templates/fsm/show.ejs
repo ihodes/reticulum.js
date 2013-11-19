@@ -42,33 +42,58 @@
         </div>
 
         <div id="state-controls">
-          <a id="add-state" href="#">&#43; Add a substate</a>
-          <a id="remove-state" href="#">&#8722; Remove state</a>
-          <a id="save-fsm" class="dark" href="#">Saved FSM</a>
+          <a class="btn"id="add-state" href="#">&#43; Add a substate</a>
+          <a class="btn"id="remove-state" href="#">&#8722; Remove state</a>
+          <a class="btn"id="save-fsm" class="dark" href="#">Saved FSM</a>
         </div>
         <div id="event-panel">
           <h3>Event Actions</h3>
-          <a id="add-event-action" href="#">&#43; Add an event action</a>
+          <a class="btn"id="add-event-action" href="#">&#43; Add an event action</a>
           <ul id="event">
           </ul>
           <h3>Enter Actions</h3>
-          <a id="add-enter-action" href="#">&#43; Add an enter action</a>
+          <a class="btn"id="add-enter-action" href="#">&#43; Add an enter action</a>
           <ul id="enter">
           </ul>
           <h3>Exit Actions</h3>
-          <a id="add-exit-action" href="#">+ Add an exit action</a>
+          <a class="btn"id="add-exit-action" href="#">+ Add an exit action</a>
           <ul id="exit">
           </ul>
         </div>
+        <% if (fsmInstanceId) { %>
+        <a href="/v1/fsm/<%= id%>/<%= fsmInstanceId%>" target="_blank" id="raw-instance">
+          Instance JSON
+        </a>
+        <% } %>
+        <a href="/v1/fsm/<%= id%>" target="_blank" id="raw-json">Raw JSON</a>
       </div>
     </div>
 
     <script>     
      d3.json("/v1/fsm/<%= id %>", function(error, fsmJson) {
        if (error) return console.warn(error);
-       displayFsm('#display', fsmJson.fsm, fsmJson.currentStateName, function() {
-         d3.select('#display .loading').remove();
-       });
+       
+       var currentStateName; 
+       <% if (fsmInstanceId) { %>
+         d3.json("/v1/fsm/<%= id %>/<%= fsmInstanceId %>", function(error, json) {
+           currentStateName = json.currentStateName;
+           displayFsm('#display', fsmJson.fsm, currentStateName, function() {
+             d3.select('#display .loading').remove();
+           });
+         });
+         setInterval(function(){
+           d3.json("/v1/fsm/<%= id %>/<%= fsmInstanceId %>", function(error, json) {
+             if (json.currentStateName !== currentStateName) {
+               currentStateName = json.currentStateName;
+               resetCurrentStateName(currentStateName);
+             }
+           })
+         }, 1000);
+       <% } else { %>
+         displayFsm('#display', fsmJson.fsm, currentStateName, function() {
+           d3.select('#display .loading').remove();
+         });
+       <% } %>
      });
     </script>
   </body>
