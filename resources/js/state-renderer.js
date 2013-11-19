@@ -5,6 +5,7 @@ var displayFsm = function(sel, fsm, currentStateName, next) {
                  currentStateName: currentStateName,
                  w: w, h: h };
 
+    window.fsm = fsm;
     setRef("fsm", fsm);
     setRef("selectedState", fsm);
 
@@ -14,6 +15,21 @@ var displayFsm = function(sel, fsm, currentStateName, next) {
     watch("selectedState", function(n, o) {
         selectState(n);
     }, {freeze: hashFsm});
+
+    d3.select("#save-fsm").on("click", function(){
+        d3.select("#save-fsm").text("Saving...");
+        d3.select("#save-fsm").style("background-color","#efefef");
+        d3.select("#save-fsm").style("cursor","default");
+        d3.xhr("/v1/fsm/"+window.location.pathname.split('/')[3])
+            .header("Content-type", "application/json")
+            .send('PUT',  '{"fsm":'+hashFsm(window.fsm)+'}', function(err, resp){
+                console.log("ERROR: ", err);
+                console.log("RESPONSE: ", resp);
+                d3.select("#save-fsm").text("Save FSM");
+                d3.select("#save-fsm").style("background-color","white");
+                d3.select("#save-fsm").style("cursor","pointer");
+            })
+    })
 
     initializeSvg(sel, opts);
     selectState(deref("selectedState"));
@@ -212,10 +228,18 @@ function removeState(fsm, state) {
     function _removeState(state, root) {
         if (root.states) {
             var index = root.states.indexOf(state);
-            if (index !== -1)
+            if (index !== -1) {
                 root.states.splice(index, 1);
-            else
+                if (state.name === root.initialStateName)
+                    if (root.states.length > 0) {
+                        root.initialStateName = root.states[0].name;
+                    } else {
+                        delete root["initialStateName"];
+                        delete root["states"];
+                    }
+            } else {
                 _.each(root.states, _.partial(_removeState, state));
+            }
         }
     }
     _removeState(state, fsm);
@@ -319,10 +343,24 @@ function selectState(state) {
             .data(data, JSON.stringify);
         actions.enter()
             .append("li").append("pre").append("textarea")
-            .html(function(d) { return JSON.stringify(d, undefined, 2); });
+            .html(function(d) { return JSON.stringify(d, undefined, 2); })
+            .on("change", function(d, i) {
+                console.log("HURR ");
+                try {
+                    // NB this is nasty mutation. TK HACK MUTATION FML JAVASCRIPT WHY.
+                    var state = deref("selectedState");
+                    state.actions[actionType].splice(i, 1, JSON.parse(this.value));
+
+                    d3.select(this).style("border", "none");
+                } catch (e) {
+                    d3.select(this).style("border", "1px dashed red");
+                }
+            });
         actions.append("button").attr("class", "remove-action-button")
-            .text("x").on("click", function(){
+            .text("X").on("click", function(d, i){
                 this.parentElement.remove();
+                var state = deref("selectedState");
+                state.actions[actionType].splice(i, 1);
             });
         actions.exit().remove();
     });
@@ -336,6 +374,9 @@ function selectState(state) {
     d3.select("#add-exit-action").on("click", function() {
         addAction("exit");
     });
+
+    // ^ need to add these new actions (and edited old actions) to the FSM
+    // TK TODO START HERE ^^^^^ 
 
     //
     // Adding and removing states
@@ -377,10 +418,28 @@ function initializeSvg(sel, opts) {
     return svg;
 }
 
-function addAction(actionType) {
+function addAction(actionType, actionArray) {
     var actions = d3.select("ul#"+actionType).append("li")
+    var state = deref("selectedState");
+
+    state.actions || (state.actions = {});
+    state.actions[actionType] || (state.actions[actionType] = []);
+    state.actions[actionType].push([]);
+
     actions.append("pre").append("textarea")
-        .attr("placeholder", "Enter action text here...");
+        .attr("placeholder", "Enter action text here...")
+        .on("change", function(d, i) {
+            console.log("CHANGED");
+            try { // COPIED FROM selectState(...) TK DRY
+                // NB this is nasty mutation. TK HACK MUTATION FML JAVASCRIPT WHY.
+                var state = deref("selectedState");
+                state.actions[actionType].splice(i, 1, JSON.parse(this.value));
+                
+                d3.select(this).style("border", "none");
+            } catch (e) {
+                d3.select(this).style("border", "1px dashed red");
+            }
+        });
     actions.append("button").attr("class", "remove-action-button")
         .text("X").on("click", function(){
             this.parentElement.remove();

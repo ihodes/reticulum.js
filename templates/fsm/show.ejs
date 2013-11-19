@@ -53,15 +53,7 @@
 
      pre { font-family: "anonymous-pro"; }
 
-     .remove-action-button { 
-       position: absolute; top: 0px; right: 4px;
-       width: 25px; height: 25px;
-       border: none;
-       border-radius: 25px;
-       background-color: #f9a1a1;
-       text-decoration:none;
-       font-weight: 700;
-     }
+     .remove-action-button { position: absolute; top: 0px; right: 4px;width: 25px; height: 25px; border: none; border-radius: 25px; background-color: #f9a1a1; text-decoration:none; font-weight: 700; cursor: pointer; }
      .remove-action-button:hover { background-color: #f98181; }
      .remove-action-button:active { background-color: #e95656; outline: none; }
      /* .remove-action-button:focus { outline: none; border: 2px dashed #222; } */
@@ -89,7 +81,7 @@
         <div id="state-controls">
           <a id="add-state" href="#">&#43; Add a substate</a>
           <a id="remove-state" href="#">&#8722; Remove state</a>
-          <span id="save-indicator" style="white-space: nowrap;">Saved 6 minutes ago.</span>
+          <a id="save-fsm" href="#">Save FSM</a>
         </div>
         <div id="event-panel">
           <h3>Event Actions</h3>
