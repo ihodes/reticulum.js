@@ -17,10 +17,13 @@ var API = {
     createParams: {fsm: [true, fsmValidator], name: true,
                    description: false, user: false},
     updateParams: {fsm: [false, fsmValidator], name: false,
-                   description: false, user: false}
+                   description: false, user: false},
+
+    formCreateParams: {name: true, description: false},
 };
 var cleaner = loch.allower(API.publicFields);
 var createValidator = _.partial(loch.validates, API.createParams);
+var formCreateValidator = _.partial(loch.validates, API.formCreateParams);
 var updateValidator = _.partial(loch.validates, API.updateParams);
 
 
@@ -35,6 +38,16 @@ exports.createFsm = function(req, res) {
     if(_.isObject(errors))
         return U.error(res, U.ERRORS.badRequest, {errors: errors});
     fsm.createFsm(req.user, req.body, U.sendBack(res, 201, cleaner));
+};
+
+exports.formCreateFsm = function(req, res) {
+    var errors = formCreateValidator(req.body);
+    if(_.isObject(errors))
+        return U.error(res, U.ERRORS.badRequest, {errors: errors});
+    fsm.createFsm(req.user, {fsm: {name: "Root"},
+                             name: req.body.name,
+                             description: req.body.description || "" }, 
+                 function(){ res.redirect("/v1/fsm/all") });
 };
 
 exports.updateFsm = function(req, res) {

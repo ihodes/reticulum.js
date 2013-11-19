@@ -47,6 +47,7 @@ app.namespace('/v1', function() {
     app.namespace('/fsm', function() {
         app.get('/',  fsms.allFsms);
         app.post('/', fsms.createFsm);
+        app.post('/form', fsms.formCreateFsm);
 
         // html/js
         app.get('/all',   fsms.listFsms);
