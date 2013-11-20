@@ -44,10 +44,10 @@ exports.formCreateFsm = function(req, res) {
     var errors = formCreateValidator(req.body);
     if(_.isObject(errors))
         return U.error(res, U.ERRORS.badRequest, {errors: errors});
-    fsm.createFsm(req.user, {fsm: {name: "Root"},
-                             name: req.body.name,
-                             description: req.body.description || "" }, 
-                 function(){ res.redirect("/v1/fsm/all") });
+    fsm.createFsm(req.user, {fsm: {name: "Root"}, name: req.body.name, description: req.body.description || "" }, function(err, result) { 
+        if (err) res.send(U.ERRORS.requestFailed, 402)
+        res.redirect("/v1/fsm/"+result.id+"/show");
+    });
 };
 
 exports.updateFsm = function(req, res) {
