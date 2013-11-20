@@ -52,7 +52,7 @@ exports.formCreateFsm = function(req, res) {
 
 exports.updateFsm = function(req, res) {
     var errors = updateValidator(req.body);
-    if(_.isObject(errors))
+    if (_.isObject(errors))
         return U.error(res, U.ERRORS.badRequest, {errors: errors});
     fsm.updateFsm(req.user, req.params.fsmId, req.body, U.sendBack(res, cleaner));
 };
