@@ -52,8 +52,6 @@ exports.formCreateFsm = function(req, res) {
 
 exports.updateFsm = function(req, res) {
     var errors = updateValidator(req.body);
-    console.log(JSON.stringify(errors)); // TK TODO REMOVE
-    // TK PICKUP error (not here) with not resetting superstate's initial substate name if a initial state is removed. Should set it to blank/none, or give some feedback to user before they save? Or when trying to save, for now, just display the validator error in the GUI? Hacky but powerful for now. Need to also fix changing the initial state name... somehow it isn't saving once the initial state itself has already been removed.
     if(_.isObject(errors))
         return U.error(res, U.ERRORS.badRequest, {errors: errors});
     fsm.updateFsm(req.user, req.params.fsmId, req.body, U.sendBack(res, cleaner));
