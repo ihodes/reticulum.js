@@ -122,7 +122,7 @@ exports.PROCEDURES = {
                         .object()
                         .value();
             res.send(args);
-            return false;
+            return true;
         };
     },
     'reify': function(locals, userContext) {
@@ -158,10 +158,9 @@ exports.PROCEDURES = {
 
 
 
-
 // Assigns val to the keyPath in context.
 //
-// e.g. if context if {} and keypath is ['a', 'nested', 'path']
+// e.g. If context is {} and keypath is ['a', 'nested', 'path']
 //      then setIn(context, keypath, 'someval') mutates context to be
 //      {a: { nested: { path: 'someval'}}
 //

@@ -17,9 +17,9 @@ var API = {
     publicFields: { _id: U._idToId, currentStateName: null, fsm: null,
                     lastEvent: null, locals: null, auth: null }
 };
-var cleaner = loch.allower(API.publicFields);
-var reifyValidator = _.partial(loch.validates, API.reifyParams);
-var eventValidator = _.partial(loch.validates, API.eventParams);
+var cleaner        = loch.allower(API.publicFields),
+    reifyValidator = _.partial(loch.validates, API.reifyParams),
+    eventValidator = _.partial(loch.validates, API.eventParams);
 
 
 exports.getFsmInstances = function(req, res) {
@@ -33,7 +33,7 @@ exports.reifyFsm = function(req, res) {
     var query = { user: req.user, _id: req.params.fsmId };
 
     var errors = reifyValidator(req.body);
-    if(_.isObject(errors))
+    if (_.isObject(errors))
         return U.error(res, U.ERRORS.badRequest, {errors: errors});
 
     fsmInstance.reifyFsm(query, req.body.locals, U.sendBack(res, 201, cleaner));
@@ -60,13 +60,16 @@ exports.getFsmInstance = function(req, res) {
 exports.sendEvent = function(req, res) {
     // this way we can authenticate with just the fsmInstance information
     var query = { _id: req.params.fsmInstanceId, user: req.user };
+    var event = { name: req.params.event, args: req.body };
+
     if (req.fsmInstance) {
         // TK TODO: wtf. even though in lib/auth, we call toObject, we're still
         //          getting the crappy internal mongo BSONy object. So we do
         //          this shit so we can get the fsm's id out properly.
         req.fsmInstance = JSON.parse(JSON.stringify(req.fsmInstance));
+
+        // Really, not authorized. But don't want to leak that information.
         if (req.fsmInstance._id !== query._id)
-            // Really, not authorized. But don't want to leak that information.
             return U.error(res, U.ERRORS.notFound);
         else
             delete query['user'];
@@ -76,8 +79,15 @@ exports.sendEvent = function(req, res) {
     if(_.isObject(errors))
         return U.error(res, U.ERRORS.badRequest, {errors: errors});
 
-    fsmInstance.sendEvent(query, req.params.event, req.body.args, res,
-                          U.sendBack(res, cleaner));
+    fsmInstance.sendEvent(query, event, function(err, fsmi, response) {
+        if (err || !fsmi) {
+            res.send({error: err}); // TK TODO proper error handling
+        } else {
+            if (response.status)   res.status(response.status);
+            if (response.headers)  res.set(response.headers);
+            res.send(response.body || cleaner(fsmi.toObject()));
+        }
+    });
 };
 
 
