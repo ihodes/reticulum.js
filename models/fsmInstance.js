@@ -38,7 +38,6 @@ exports.getFsmInstance = function(query, params, callback) {
 //
 // `callback` is called with error, fsmi the new FSM instance, and the response object
 exports.sendEvent = function(query, event, callback) {
-    var fsmi, userCtx, fields;
     db.fsmInstance.findOne(query)
       .populate('fsm')
       .exec(function(err, fsmInstance) {
@@ -47,18 +46,19 @@ exports.sendEvent = function(query, event, callback) {
           db.user.findOne({ _id: fsmInstance.user }, function(err, user) {
               if (err || !user)  return callback(err, null);
 
-              fsmi     =  _fsmiFromDoc(fsmInstance);
-              userCtx  =  _.extend(user.context, { id: user._id });
+              var fsmi     =  _fsmiFromDoc(fsmInstance),
+                  addlCtx  = {_id: user._id, _name: user.name, _key: user.key},
+                  userCtx  =  _.extend(user.context, addlCtx);
 
 //              try {
-              reticulum.send(fsmi, userCtx, event, function(fsmi, response) {
-                  fields = _.pick(fsmi, 'currentStateName', 'lastEvent', 'locals');
-                  db.fsmInstance.findOneAndUpdate(query, fields, function(e, fsmi) {
-                      return callback(e, fsmi, response);
-                  });
-              });
-//              } catch (e) {
-//                return callback(e, null, null);
+                reticulum.send(fsmi, userCtx, event, function(fsmi, response) {
+                    var fields =_.pick(fsmi, 'currentStateName', 'lastEvent', 'locals');
+                    db.fsmInstance.findOneAndUpdate(query, fields, function(err, fsmi) {
+                        return callback(err, fsmi, response);
+                    });
+                });
+//              } catch (err) {
+//                return callback(err, null, null);
 //              }
           });
       });

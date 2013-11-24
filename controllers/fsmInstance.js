@@ -12,13 +12,11 @@ var _           = require('underscore'),
 
 var objValidator = loch.validator("{{key}} must be an object", _.isObject);
 var API = {
-    reifyParams: { locals: [false, objValidator] },
     eventParams: { args: [false, objValidator] },
     publicFields: { _id: U._idToId, currentStateName: null, fsm: null,
                     lastEvent: null, locals: null, auth: null }
 };
 var cleaner        = loch.allower(API.publicFields),
-    reifyValidator = _.partial(loch.validates, API.reifyParams),
     eventValidator = _.partial(loch.validates, API.eventParams);
 
 
@@ -31,12 +29,7 @@ exports.getFsmInstances = function(req, res) {
 
 exports.reifyFsm = function(req, res) {
     var query = { user: req.user, _id: req.params.fsmId };
-
-    var errors = reifyValidator(req.body);
-    if (_.isObject(errors))
-        return U.error(res, U.ERRORS.badRequest, {errors: errors});
-
-    fsmInstance.reifyFsm(query, req.body.locals, U.sendBack(res, 201, cleaner));
+    fsmInstance.reifyFsm(query, req.body, U.sendBack(res, 201, cleaner));
 };
 
 exports.getFsmInstance = function(req, res) {
@@ -47,11 +40,11 @@ exports.getFsmInstance = function(req, res) {
         //          getting the crappy internal mongo BSONy object. So we do
         //          this shit so we can get the fsm's id out properly.
         req.fsmInstance = JSON.parse(JSON.stringify(req.fsmInstance));
-        if (req.fsmInstance._id !== query._id)
-            // Really, not authorized. But don't want to leak that information.
-            return U.error(res, U.ERRORS.notFound);
-        else
-            delete query['user'];
+                                                     // Don't want to leak that, but
+                                                     // the error really is a 401
+                                                     //                      \/ 
+        if (req.fsmInstance._id !== query._id)  return U.error(res, U.ERRORS.notFound);
+        else  delete query['user'];
     }
 
     fsmInstance.getFsmInstance(query, req.body, U.sendBack(res, cleaner));
@@ -96,7 +89,9 @@ exports.sendEvent = function(req, res) {
  //// HTML stuff hurr ////
 /////////////////////////
 
-// TK INSECURE not secure (need to ensure that the fsm belongs to the user)
+// TK SECURITY
+// \/ not secure (need to ensure that the fsm belongs to the user)
 exports.showFsmInstance = function(req, res) {
-    res.render('fsm/show.ejs', {id: req.params.fsmId, fsmInstanceId: req.params.fsmInstanceId});
+    res.render('fsm/show.ejs', {id: req.params.fsmId,
+                                fsmInstanceId: req.params.fsmInstanceId});
 };

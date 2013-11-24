@@ -5,5 +5,7 @@
 exports.settings = {
     PORT: process.env.PORT,
     ENVIRONMENT: process.env.ENVIRONMENT,
-    MONGO_URL: process.env.MONGO_URL
+    MONGO_URL: process.env.MONGO_URL,
+    BASE_URL: process.env.BASE_URL,
+    API_VERSION: 'v1'
 };
