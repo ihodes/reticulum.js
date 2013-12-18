@@ -12,12 +12,10 @@ var _           = require('underscore'),
 
 var objValidator = loch.validator("{{key}} must be an object", _.isObject);
 var API = {
-    eventParams: { args: [false, objValidator] },
     publicFields: { _id: U._idToId, currentStateName: null, fsm: null,
                     lastEvent: null, locals: null, auth: null }
 };
-var cleaner        = loch.allower(API.publicFields),
-    eventValidator = _.partial(loch.validates, API.eventParams);
+var cleaner        = loch.allower(API.publicFields);
 
 
 exports.getFsmInstances = function(req, res) {
@@ -67,10 +65,6 @@ exports.sendEvent = function(req, res) {
         else
             delete query['user'];
     }
-
-    var errors = eventValidator(req.body);
-    if(_.isObject(errors))
-        return U.error(res, U.ERRORS.badRequest, {errors: errors});
 
     fsmInstance.sendEvent(query, event, function(err, fsmi, response) {
         if (err || !fsmi) {

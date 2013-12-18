@@ -14,14 +14,14 @@ var testfsm = {
     states: [
         { name: 'SubstateA1',
           actions: {
-              event: [ [['if', 'eq', 'gotoA2'], 'SubstateA2'],
-                       [['if', 'eq', 'gotoSubA3'], 'SubsubstateA31'],
-                       [['if', 'eq', 'gotoA4'], 'SubstateA4'] ]
+              event: [ [['==', '..name', 'gotoA2'], 'SubstateA2'],
+                       [['==', '..name', 'gotoSubA3'], 'SubsubstateA31'],
+                       [['==', '..name', 'gotoA4'], 'SubstateA4'] ]
           },
         },
         { name: 'SubstateA2',
           actions: {
-              event: [ [['if', 'eq', 'gotoA1'], 'SubstateA1'] ],
+              event: [ [['==', '..name', 'gotoA1'], 'SubstateA1'] ],
               enter: [ [['set', 'nestedKey.cool', 'supercoolval']] ]
           },
         },
@@ -30,8 +30,8 @@ var testfsm = {
           states: [
               { name: 'SubsubstateA31',
                 actions: {
-                    event: [ [['if', 'eq', 'gotoA2'], 'SubstateA2'],
-                             [['if', 'eq', 'goDeep!'], 'SubsubstateA32'] ],
+                    event: [ [['==', '..name', 'gotoA2'], 'SubstateA2'],
+                             [['==', '..name', 'goDeep!'], 'SubsubstateA32'] ],
                     enter: [ [['set', 'magicVar', 'testSet']] ]
                 }
               },
@@ -43,7 +43,7 @@ var testfsm = {
         },
         { name: 'SubstateA4',
           actions: {
-              enter: [ [['request', 'GET', 'http://httpbin.org/get', '', 'avar']] ]
+              enter: [ [['request', 'GET', 'http://httpbin.org/get', 'avar']] ]
           }}
     ]
 };
@@ -73,135 +73,133 @@ vows.describe('Operating with a FSM').addBatch({
      'when sending an event that should transition': {
          topic: function() {
              var fsmi =  reticulum.reify(testfsm);
-             fsmi = reticulum.send(fsmi, USER_CONTEXT, 'gotoA2');
-             return fsmi;
+             reticulum.send(fsmi, USER_CONTEXT, {name: 'gotoA2'}, this.callback);
          },
 
-         'a new FSM instance should be returned with the new state': function(topic) {
-            should.exist(topic);
+         'a new FSM instance should be returned with the new state': function(fsmi, response) {
+            should.exist(fsmi);
 
-            topic.should.be.an.instanceOf(Object);
-            topic.should.have.keys('fsm', 'currentStateName', 'locals', 'lastEvent');
-            topic.currentStateName.should.be.a.String;
-            topic.locals.should.be.an.instanceOf(Object);
-            topic.lastEvent.should.be.an.instanceOf(Object);
+            fsmi.should.be.an.instanceOf(Object);
+            fsmi.should.have.keys('fsm', 'currentStateName', 'locals', 'lastEvent');
+            fsmi.currentStateName.should.be.a.String;
+            fsmi.locals.should.be.an.instanceOf(Object);
+            fsmi.lastEvent.should.be.an.instanceOf(Object);
 
             // testing transition
-            topic.currentStateName.should.equal('SubstateA2');
+            fsmi.currentStateName.should.equal('SubstateA2');
         }
     },
 
     'when sending an event that has an enter event, and transitions': {
         topic: function() {
             var fsmi =  reticulum.reify(testfsm);
-            fsmi = reticulum.send(fsmi, USER_CONTEXT, 'gotoSubA3');
-            return fsmi;
+            reticulum.send(fsmi, USER_CONTEXT, {name:'gotoSubA3'}, this.callback);
         },
 
-        'a FSM instance should be returned with the new state and updated global': function(topic) {
-            should.exist(topic);
+        'a FSM instance should be returned with the new state and updated global': function(fsmi, response) {
+            should.exist(fsmi);
 
-            topic.should.be.an.instanceOf(Object);
-            topic.should.have.keys('fsm', 'currentStateName', 'locals', 'lastEvent');
-            topic.currentStateName.should.be.a.String;
-            topic.locals.should.be.an.instanceOf(Object);
-            topic.lastEvent.should.be.an.instanceOf(Object);
+            fsmi.should.be.an.instanceOf(Object);
+            fsmi.should.have.keys('fsm', 'currentStateName', 'locals', 'lastEvent');
+            fsmi.currentStateName.should.be.a.String;
+            fsmi.locals.should.be.an.instanceOf(Object);
+            fsmi.lastEvent.should.be.an.instanceOf(Object);
 
             // testing nested transition
-            topic.currentStateName.should.equal('SubsubstateA31');
+            fsmi.currentStateName.should.equal('SubsubstateA31');
 
             // testing locals (setting)
-            topic.locals.should.have.keys('magicVar');
-            topic.locals.magicVar.should.eql('testSet');
+            fsmi.locals.should.have.keys('magicVar');
+            fsmi.locals.magicVar.should.eql('testSet');
         }
     },
 
     'when transitioning into a state that sets a nested local key': {
         topic: function() {
             var fsmi =  reticulum.reify(testfsm);
-            fsmi = reticulum.send(fsmi, USER_CONTEXT, 'gotoA2');
-            return fsmi;
+            reticulum.send(fsmi, USER_CONTEXT, {name: 'gotoA2'}, this.callback);
         },
 
-        'a FSM instance should be returned with the correct locals': function(topic) {
-            should.exist(topic);
+        'a FSM instance should be returned with the correct locals': function(fsmi, response) {
+            should.exist(fsmi);
 
-            topic.should.be.an.instanceOf(Object);
-            topic.should.have.keys('fsm', 'currentStateName', 'locals', 'lastEvent');
-            topic.currentStateName.should.be.a.String;
-            topic.locals.should.be.an.instanceOf(Object);
-            topic.lastEvent.should.be.an.instanceOf(Object);
+            fsmi.should.be.an.instanceOf(Object);
+            fsmi.should.have.keys('fsm', 'currentStateName', 'locals', 'lastEvent');
+            fsmi.currentStateName.should.be.a.String;
+            fsmi.locals.should.be.an.instanceOf(Object);
+            fsmi.lastEvent.should.be.an.instanceOf(Object);
 
             // testing locals (setting)
-            topic.locals.should.have.keys('nestedKey');
-            topic.locals.nestedKey.should.have.keys('cool');
-            topic.locals.nestedKey.cool.should.eql('supercoolval');
+            fsmi.locals.should.have.keys('nestedKey');
+            fsmi.locals.nestedKey.should.have.keys('cool');
+            fsmi.locals.nestedKey.cool.should.eql('supercoolval');
         }
     },
 
     'when transitioning into a state that clears a key': {
         topic: function() {
             var fsmi =  reticulum.reify(testfsm);
-            fsmi = reticulum.send(fsmi, USER_CONTEXT, 'gotoSubA3');
-            fsmi = reticulum.send(fsmi, USER_CONTEXT, 'goDeep!');
-            return fsmi;
+            var cb = this.callback;
+            reticulum.send(fsmi, USER_CONTEXT, {name: 'gotoSubA3'}, function(fsmi, response) {
+                reticulum.send(fsmi, USER_CONTEXT, {name: 'goDeep!'}, cb);
+            });
         },
 
-        'the associated value should now be undefined': function(topic) {
-            should.exist(topic);
+        'the associated value should not exist': function(fsmi, response) {
+            should.exist(fsmi);
 
-            topic.should.be.an.instanceOf(Object);
-            topic.should.have.keys('fsm', 'currentStateName', 'locals', 'lastEvent');
-            topic.currentStateName.should.be.a.String;
-            topic.locals.should.be.an.instanceOf(Object);
-            topic.lastEvent.should.be.an.instanceOf(Object);
+            fsmi.should.be.an.instanceOf(Object);
+            fsmi.should.have.keys('fsm', 'currentStateName', 'locals', 'lastEvent');
+            fsmi.currentStateName.should.be.a.String;
+            fsmi.locals.should.be.an.instanceOf(Object);
+            fsmi.lastEvent.should.be.an.instanceOf(Object);
 
             // testing locals (setting)
-            topic.locals.should.have.keys('magicVar');
-            should.strictEqual(undefined, topic.locals.magicVar);
+            should.strictEqual(undefined, fsmi.locals.magicVar);
         }
     },
 
     'when transitioning a few times': {
         topic: function() {
             var fsmi =  reticulum.reify(testfsm);
-            fsmi = reticulum.send(fsmi, USER_CONTEXT, 'gotoA2');
-            fsmi = reticulum.send(fsmi, USER_CONTEXT, 'gotoA1');
-            fsmi = reticulum.send(fsmi, USER_CONTEXT, 'gotoSubA3');
-            return fsmi;
+            var cb = this.callback;
+            reticulum.send(fsmi, USER_CONTEXT, {name:'gotoA2'}, function(fsmi, response) {
+                reticulum.send(fsmi, USER_CONTEXT, {name:'gotoA1'}, function(fsmi, response){
+                    reticulum.send(fsmi, USER_CONTEXT, {name:'gotoSubA3'}, cb); 
+                });
+            });
         },
 
-        'should be in the correct state': function(topic) {
-            should.exist(topic);
+        'should be in the correct state': function(fsmi, response) {
+            should.exist(fsmi);
 
-            topic.should.be.an.instanceOf(Object);
-            topic.should.have.keys('fsm', 'currentStateName', 'locals', 'lastEvent');
-            topic.currentStateName.should.be.a.String;
-            topic.locals.should.be.an.instanceOf(Object);
-            topic.lastEvent.should.be.an.instanceOf(Object);
+            fsmi.should.be.an.instanceOf(Object);
+            fsmi.should.have.keys('fsm', 'currentStateName', 'locals', 'lastEvent');
+            fsmi.currentStateName.should.be.a.String;
+            fsmi.locals.should.be.an.instanceOf(Object);
+            fsmi.lastEvent.should.be.an.instanceOf(Object);
 
-            topic.currentStateName.should.equal('SubsubstateA31');
+            fsmi.currentStateName.should.equal('SubsubstateA31');
         }
     },
 
     'when making an external request': {
         topic: function() {
             var fsmi =  reticulum.reify(testfsm);
-            fsmi = reticulum.send(fsmi, USER_CONTEXT, 'gotoA4');
-            return fsmi;
+            reticulum.send(fsmi, USER_CONTEXT, {name:'gotoA4'}, this.callback);
         },
 
-        'the response should be stored': function(topic) {
-            should.exist(topic);
+        'the response should be stored': function(fsmi, response) {
+            should.exist(fsmi);
 
-            topic.should.be.an.instanceOf(Object);
-            topic.should.have.keys('fsm', 'currentStateName', 'locals', 'lastEvent');
-            topic.currentStateName.should.be.a.String;
-            topic.locals.should.be.an.instanceOf(Object);
-            topic.lastEvent.should.be.an.instanceOf(Object);
+            fsmi.should.be.an.instanceOf(Object);
+            fsmi.should.have.keys('fsm', 'currentStateName', 'locals', 'lastEvent');
+            fsmi.currentStateName.should.be.a.String;
+            fsmi.locals.should.be.an.instanceOf(Object);
+            fsmi.lastEvent.should.be.an.instanceOf(Object);
 
-            topic.locals.should.have.keys('avar');
-            topic.locals.avar.url.should.equal('http://httpbin.org/get');
+            fsmi.locals.should.have.keys('avar');
+            fsmi.locals.avar.url.should.equal('http://httpbin.org/get');
         }
     }
 }).export(module);

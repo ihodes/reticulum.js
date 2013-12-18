@@ -150,7 +150,7 @@ vows.describe('Interacting with FSMs via HTTP').addBatch({
     // POST /fsm/:id/reify -- reify a FSM
     'when reifying a FSM': {
         topic: function() {
-            var body = { locals: LOCALS };
+            var body = LOCALS;
             body = JSON.stringify(body);
             request({
                 url: BASE_URL + 'fsm/' + FSM_ID + "/reify",
@@ -188,7 +188,7 @@ vows.describe('Interacting with FSMs via HTTP').addBatch({
         'and then when sending it an event': {
             topic: function() {
                 var eventName = 'gotoA2';
-                var body = { args: { argz: 'does nothing' } };
+                var body = { argz: 'does nothing' };
                 body = JSON.stringify(body);
                 request({
                     url: BASE_URL + 'fsm/' + FSM_ID + "/" + FSM_INSTANCE_ID + '/send/' + eventName,
@@ -255,15 +255,15 @@ var FSM = {
     states: [
         { name: 'SubstateA1',
           actions: {
-              event: [ [['if', 'eq', 'gotoA2'], 'SubstateA2'],
-                       [['if', 'eq', 'gotoSubA3'], 'SubsubstateA31'],
-                       [['if', 'eq', 'gotoA4'], 'SubstateA4'] ]
+              event: [ [['==', '..name', 'gotoA2'], 'SubstateA2'],
+                       [['==', '..name', 'gotoSubA3'], 'SubsubstateA31'],
+                       [['==', '..name', 'gotoA4'], 'SubstateA4'] ]
           },
         },
         { name: 'SubstateA2',
           actions: {
-              event: [ [['if', 'eq', 'gotoA1'], 'SubstateA1'] ],
-              enter: [ [['set', 'anarg', '..argz']] ]
+              event: [ [['==', '..name', 'gotoA1'], 'SubstateA1'] ],
+              enter: [ [['set', 'anarg', '..args.argz']] ]
           },
         },
         { name: 'SubstateA3',
@@ -271,8 +271,8 @@ var FSM = {
           states: [
               { name: 'SubsubstateA31',
                 actions: {
-                    event: [ [['if', 'eq', 'gotoA2'], 'SubstateA2'],
-                             [['if', 'eq', 'goDeep!'], 'SubsubstateA32'] ],
+                    event: [ [['==', '..name', 'gotoA2'], 'SubstateA2'],
+                             [['==', '..name', 'goDeep!'], 'SubsubstateA32'] ],
                     enter: [ [['set', 'magicVar', 'testSet']] ]
                 }
               },
@@ -284,7 +284,7 @@ var FSM = {
         },
         { name: 'SubstateA4',
           actions: {
-              enter: [ [['request', 'GET', 'http://httpbin.org/get', '', 'avar']] ]
+              enter: [ [['request', 'GET', 'http://httpbin.org/get', 'avar']] ]
           }}
     ]
 };
